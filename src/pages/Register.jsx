@@ -18,7 +18,7 @@ export default function Register() {
     <div>
       <h2>Регистрация</h2>
       <input
-        placeholder="Телефон"
+        placeholder="Имя"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
       />

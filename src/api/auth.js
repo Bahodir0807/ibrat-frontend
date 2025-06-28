@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://ibrat.onrender.com",
+  baseURL: "https://ibrat.onrender.com",
   withCredentials: true,
 });
 

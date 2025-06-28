@@ -10,7 +10,7 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://ibrat.onrender.com/auth/register", {
+    const res = await fetch("https://ibrat.onrender.com/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, phoneNumber, password, role, roleKey }),

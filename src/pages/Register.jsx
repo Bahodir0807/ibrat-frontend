@@ -10,7 +10,7 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:3000/auth/register", {
+    const res = await fetch("http://ibrat.onrender.com/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, phoneNumber, password, role, roleKey }),
@@ -53,7 +53,6 @@ export default function Register() {
         onChange={(e) => setPassword(e.target.value)}
       />
 
-      {/* Выбор роли */}
       <select
         className="w-full p-2 bg-gray-700 rounded"
         value={role}
@@ -65,7 +64,6 @@ export default function Register() {
         <option value="panda">🐼 Суперроль (panda)</option>
       </select>
 
-      {/* RoleKey вводится только если не student */}
       {role !== "student" && (
         <input
           className="w-full p-2 bg-gray-700 rounded"

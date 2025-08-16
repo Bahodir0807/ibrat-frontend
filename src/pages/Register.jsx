@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./Register.module.css";
+
 export default function Register() {
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -10,17 +11,39 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    const res = await fetch("https://b.sultonoway.uz/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, phoneNumber, password, role, roleKey }),
-    });
 
-    const data = await res.json();
-    if (res.ok) {
-      setMessage("✅ Зарегистрирован!");
-    } else {
-      setMessage("❌ " + data.message);
+    if (!username || !phoneNumber || !password) {
+      setMessage("❌ Заполните все обязательные поля");
+      return;
+    }
+    if (role !== "student" && !roleKey) {
+      setMessage("❌ Введите ключ доступа для выбранной роли");
+      return;
+    }
+
+    try {
+      const res = await fetch("https://b.sultonoway.uz/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, phoneNumber, password, role, roleKey }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage("✅ Зарегистрирован!");
+        // Сброс формы
+        setUsername("");
+        setPhoneNumber("");
+        setPassword("");
+        setRole("student");
+        setRoleKey("");
+      } else {
+        setMessage("❌ " + data.message);
+      }
+    } catch (err) {
+      setMessage("❌ Ошибка сети");
+      console.log(err); // твой console.log остаётся
     }
   };
 
@@ -35,14 +58,15 @@ export default function Register() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
-        
+
         <input
-          type="text"
+          type="tel"
           placeholder="Номер телефона"
+          pattern="\+?\d{10,15}"
           value={phoneNumber}
           onChange={(e) => setPhoneNumber(e.target.value)}
         />
-        
+
         <input
           type="password"
           placeholder="Пароль"
@@ -72,6 +96,7 @@ export default function Register() {
         <button type="submit">
           Зарегистрироваться
         </button>
+
         {message && (
           <div className={`${styles.message} ${message.includes('✅') ? styles.success : styles.error}`}>
             {message}

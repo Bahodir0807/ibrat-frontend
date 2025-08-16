@@ -1,30 +1,67 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../api/auth";
+import jwt_decode from "jwt-decode";
+import styles from "./Login.module.css";
 
-export default function Home() {
-  const [role, setRole] = useState(null);
+export default function Login() {
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const userRole = localStorage.getItem("role");
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await login(credentials);
+      const token = data.token;
+      localStorage.setItem("token", token);
 
-    if (!token || !userRole) {
-      navigate("/login");
-      return;
+      const decoded = jwt_decode(token);
+      const role = decoded.role || "student";
+      localStorage.setItem("role", role);
+
+      console.log("🔥 Token:", token);
+      console.log("🔥 Role:", role);
+
+      alert("Вход успешен!");
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Ошибка входа");
     }
+  };
 
-    setRole(userRole);
-  }, [navigate]);
-
-  if (!role) return <p>Загрузка...</p>;
+  const handleChange = (e) => {
+    setCredentials({ ...credentials, [e.target.id]: e.target.value });
+  };
 
   return (
-    <div>
-      {role === "student" && <p>Привет, ученик! Тут твой контент.</p>}
-      {role === "teacher" && <p>Привет, учитель! Тут твой контент.</p>}
-      {role === "admin" && <p>Привет, админ! Тут твой контент.</p>}
-      {role === "panda" && <p>Привет, суперроль 🐼! Тут твой контент.</p>}
+    <div className={styles.loginContainer}>
+      <form className={styles.loginForm} onSubmit={handleLogin}>
+        <label htmlFor="username">
+          Имя пользователя
+          <input
+            id="username"
+            type="text"
+            placeholder="Имя пользователя"
+            value={credentials.username}
+            onChange={handleChange}
+          />
+        </label>
+        <label htmlFor="password">
+          Пароль
+          <input
+            id="password"
+            type="password"
+            placeholder="Пароль"
+            value={credentials.password}
+            onChange={handleChange}
+          />
+        </label>
+        <button type="submit">Войти</button>
+      </form>
     </div>
   );
 }

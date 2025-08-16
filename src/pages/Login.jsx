@@ -15,18 +15,24 @@ export default function Login() {
     try {
       const { data } = await login(credentials);
       const token = data.token;
-      const role = data.role;
+      localStorage.setItem("token", token);
 
       console.log("🔥 Token:", token);
-      console.log("🔥 Role:", role);
 
-      localStorage.setItem("token", token);
+      const res = await fetch("https://b.sultonoway.uz/auth/me", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const userData = await res.json();
+      const role = userData.role;
+
+      console.log("🔥 Role:", role);
       localStorage.setItem("role", role);
 
       alert("Вход успешен!");
       navigate("/");
-    } catch ({ response: { data: { message } = {} } = {} }) {
-      alert(message || "Ошибка входа");
+    } catch (err) {
+      console.error(err);
+      alert(err?.response?.data?.message || "Ошибка входа");
     }
   };
 

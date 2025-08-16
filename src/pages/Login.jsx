@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
-import jwt_decode from "jwt-decode";
 import styles from "./Login.module.css";
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -13,20 +15,11 @@ export default function Login() {
     try {
       const { data } = await login(credentials);
       const token = data.token;
-      if (!token) throw new Error("Токен не получен");
-
       localStorage.setItem("token", token);
 
-      let decoded;
-      try {
-        decoded = jwt_decode(token);
-      } catch (err) {
-        console.error("Ошибка декодирования JWT:", err);
-        alert("Ошибка входа: неверный токен");
-        return;
-      }
-
-      const role = decoded?.role || "student";
+      // Декодируем payload JWT без внешних библиотек
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const role = payload.role || "student";
       localStorage.setItem("role", role);
 
       console.log("🔥 Token:", token);
@@ -36,7 +29,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || err.message || "Ошибка входа");
+      alert(err?.response?.data?.message || "Ошибка входа.");
     }
   };
 
@@ -57,7 +50,6 @@ export default function Login() {
             onChange={handleChange}
           />
         </label>
-
         <label htmlFor="password">
           Пароль
           <input
@@ -68,7 +60,6 @@ export default function Login() {
             onChange={handleChange}
           />
         </label>
-
         <button type="submit">Войти</button>
       </form>
     </div>

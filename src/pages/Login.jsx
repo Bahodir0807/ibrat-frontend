@@ -1,11 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
-import jwt_decode from "jwt-decode";
+import * as jwt_decode from "jwt-decode"; // 👈 исправленный импорт
 import styles from "./Login.module.css";
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({ username: "", password: "" });
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -13,9 +16,11 @@ export default function Login() {
     try {
       const { data } = await login(credentials);
       const token = data.token;
+
       localStorage.setItem("token", token);
 
-      const decoded = jwt_decode(token);
+      // декодируем токен
+      const decoded = jwt_decode.default ? jwt_decode.default(token) : jwt_decode(token);
       const role = decoded.role || "student";
       localStorage.setItem("role", role);
 
@@ -26,7 +31,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || "Ошибка входа");
+      alert(err?.response?.data?.message || "Ошибка входа.");
     }
   };
 
@@ -47,6 +52,7 @@ export default function Login() {
             onChange={handleChange}
           />
         </label>
+
         <label htmlFor="password">
           Пароль
           <input
@@ -57,6 +63,7 @@ export default function Login() {
             onChange={handleChange}
           />
         </label>
+
         <button type="submit">Войти</button>
       </form>
     </div>

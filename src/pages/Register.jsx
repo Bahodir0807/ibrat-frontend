@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "../App.css";
+import styles from "./Register.module.css";
 export default function Register() {
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -25,64 +25,62 @@ export default function Register() {
   };
 
   return (
-    <form
-      onSubmit={handleRegister}
-      className="bg-gray-800 p-4 rounded-xl w-full max-w-sm space-y-3"
-    >
-      <h2 className="text-xl font-bold">Регистрация</h2>
+    <div className={styles.registerContainer}>
+      <form onSubmit={handleRegister} className={styles.registerForm}>
+        <h2>Регистрация</h2>
 
-      <input
-        className="w-full p-2 bg-gray-700 rounded"
-        type="text"
-        placeholder="Имя"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        className="w-full p-2 bg-gray-700 rounded"
-        type="text"
-        placeholder="Номер телефона"
-        value={phoneNumber}
-        onChange={(e) => setPhoneNumber(e.target.value)}
-      />
-      <input
-        className="w-full p-2 bg-gray-700 rounded"
-        type="password"
-        placeholder="Пароль"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-
-      <select
-        className="w-full p-2 bg-gray-700 rounded"
-        value={role}
-        onChange={(e) => setRole(e.target.value)}
-      >
-        <option value="student">Ученик</option>
-        <option value="teacher">Учитель</option>
-        <option value="admin">Админ</option>
-        <option value="panda">🐼 Суперроль (panda)</option>
-      </select>
-
-      {role !== "student" && (
         <input
-          className="w-full p-2 bg-gray-700 rounded"
           type="text"
-          placeholder="Ключ для доступа (roleKey)"
-          value={roleKey}
-          onChange={(e) => setRoleKey(e.target.value)}
+          placeholder="Имя"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
-      )}
+        
+        <input
+          type="text"
+          placeholder="Номер телефона"
+          value={phoneNumber}
+          onChange={(e) => setPhoneNumber(e.target.value)}
+        />
+        
+        <input
+          type="password"
+          placeholder="Пароль"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
-      <button
-        type="submit"
-        className="w-full bg-green-600 py-2 rounded hover:bg-green-700"
-      >
-        Зарегистрироваться
-      </button>
-      <audio src="admin" controls className="a"></audio>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+        >
+          <option value="student">Ученик</option>
+          <option value="teacher">Учитель</option>
+          <option value="admin">Админ</option>
+          <option value="panda">🐼 Суперроль (panda)</option>
+        </select>
 
-      {message && <p>{message}</p>}
-    </form>
+        {role !== "student" && (
+          <input
+            type="text"
+            placeholder="Ключ для доступа (roleKey)"
+            value={roleKey}
+            onChange={(e) => setRoleKey(e.target.value)}
+          />
+        )}
+
+        <button type="submit">
+          Зарегистрироваться
+        </button>
+        
+        <audio src="admin" controls className={styles.audioPlayer}></audio>
+
+        {message && (
+          <div className={`${styles.message} ${message.includes('✅') ? styles.success : styles.error}`}>
+            {message}
+          </div>
+        )}
+      </form>
+    </div>
   );
 }

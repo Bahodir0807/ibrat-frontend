@@ -26,7 +26,7 @@ export default function Login() {
 
   return (
     <div className={styles.loginContainer}>
-      <form className={styles.loginForm} onSubmit={handleLogin}>
+      <form className={styles.loginForm} onSubmit={handleLogin} action={"/user"}>
         <label htmlFor="username">
           Имя пользователя
           <input

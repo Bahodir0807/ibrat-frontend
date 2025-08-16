@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { login } from "../api/auth";
+import jwt_decode from "jwt-decode";
 import styles from "./Login.module.css";
 
 export default function Login() {
@@ -19,14 +20,11 @@ export default function Login() {
 
       console.log("🔥 Token:", token);
 
-      const res = await fetch("https://b.sultonoway.uz/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const userData = await res.json();
-      const role = userData.role;
+      const decoded = jwt_decode(token);
+      const role = decoded.role || "student";
+      localStorage.setItem("role", role);
 
       console.log("🔥 Role:", role);
-      localStorage.setItem("role", role);
 
       alert("Вход успешен!");
       navigate("/");

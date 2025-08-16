@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styles from "./Register.module.css";
 
 export default function Register() {
@@ -8,6 +9,8 @@ export default function Register() {
   const [role, setRole] = useState("student");
   const [roleKey, setRoleKey] = useState("");
   const [message, setMessage] = useState("");
+
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -38,6 +41,8 @@ export default function Register() {
         setPassword("");
         setRole("student");
         setRoleKey("");
+
+        navigate("/");
       } else {
         setMessage("❌ " + data.message);
       }

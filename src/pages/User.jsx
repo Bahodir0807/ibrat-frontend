@@ -1,11 +1,24 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
+
+    if (!token || !role) {
+      navigate("/login");
+      return;
+    }
+
+    if (role !== "admin" && role !== "panda") {
+      navigate("/");
+      return;
+    }
 
     fetch("https://b.sultonoway.uz/users", {
       headers: { Authorization: `Bearer ${token}` },
@@ -19,7 +32,7 @@ export default function Users() {
         console.error(err);
         setLoading(false);
       });
-  }, []);
+  }, [navigate]);
 
   if (loading) return <p>Загрузка пользователей...</p>;
 

@@ -29,7 +29,7 @@ export default function Login() {
       navigate("/");
     } catch (err) {
       console.error(err);
-      alert(err?.response?.data?.message || "Ошибка входа");
+      alert(err?.response?.data?.message || "Ошибка входа.");
     }
   };
 
@@ -62,6 +62,6 @@ export default function Login() {
         </label>
         <button type="submit">Войти</button>
       </form>
-    </div>
+    </div> 
   );
 }

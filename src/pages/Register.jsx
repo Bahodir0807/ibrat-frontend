@@ -72,9 +72,6 @@ export default function Register() {
         <button type="submit">
           Зарегистрироваться
         </button>
-        
-        <audio src="admin" controls className={styles.audioPlayer}></audio>
-
         {message && (
           <div className={`${styles.message} ${message.includes('✅') ? styles.success : styles.error}`}>
             {message}

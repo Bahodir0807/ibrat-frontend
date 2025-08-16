@@ -5,10 +5,7 @@ import jwt_decode from "jwt-decode";
 import styles from "./Login.module.css";
 
 export default function Login() {
-  const [credentials, setCredentials] = useState({
-    username: "",
-    password: "",
-  });
+  const [credentials, setCredentials] = useState({ username: "", password: "" });
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -18,12 +15,11 @@ export default function Login() {
       const token = data.token;
       localStorage.setItem("token", token);
 
-      console.log("🔥 Token:", token);
-
       const decoded = jwt_decode(token);
       const role = decoded.role || "student";
       localStorage.setItem("role", role);
 
+      console.log("🔥 Token:", token);
       console.log("🔥 Role:", role);
 
       alert("Вход успешен!");

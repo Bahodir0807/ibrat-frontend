@@ -1,10 +1,10 @@
 import { useState } from "react";
-
+import "App.css";
 export default function Register() {
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student"); // по умолчанию student
+  const [role, setRole] = useState("student");
   const [roleKey, setRoleKey] = useState("");
   const [message, setMessage] = useState("");
 
@@ -80,6 +80,7 @@ export default function Register() {
       >
         Зарегистрироваться
       </button>
+      <audio src="admin" controls className="a"></audio>
 
       {message && <p>{message}</p>}
     </form>

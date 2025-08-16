@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "https://ibrat.onrender.com",
+  baseURL: "https://b.sultonoway.uz",
   withCredentials: true,
 });
 

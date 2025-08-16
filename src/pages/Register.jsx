@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "App.css";
+import "../App.css";
 export default function Register() {
   const [username, setUsername] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");

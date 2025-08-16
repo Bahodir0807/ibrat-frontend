@@ -1,38 +1,54 @@
 import { useState } from "react";
 import { login } from "../api/auth";
+import styles from "./Login.module.css";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [credentials, setCredentials] = useState({
+    username: "",
+    password: "",
+  });
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
     try {
-      const res = await login({ username, password });
-
-      const token = res.data.token;
-      console.log("🔥 Токен:", token);
-
+      const { data } = await login(credentials);
+      const token = data.token;
+      console.log("🔥 Token:", token);
       alert("Вход успешен!");
-    } catch (err) {
-      alert(err?.response?.data?.message || "Ошибка входа");
+    } catch ({ response: { data: { message } = {} } = {} }) {
+      alert(message || "Ошибка входа");
     }
   };
 
+  const handleChange = (e) => {
+    setCredentials({ ...credentials, [e.target.id]: e.target.value });
+  };
+
   return (
-    <div>
-      <h2>Вход</h2>
-      <input
-        placeholder="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-      />
-      <input
-        placeholder="Пароль"
-        type="password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={handleLogin}>Войти</button>
+    <div className={styles.loginContainer}>
+      <form className={styles.loginForm} onSubmit={handleLogin}>
+        <label htmlFor="username">
+          Имя пользователя
+          <input
+            id="username"
+            type="text"
+            placeholder="Имя пользователя"
+            value={credentials.username}
+            onChange={handleChange}
+          />
+        </label>
+        <label htmlFor="password">
+          Пароль
+          <input
+            id="password"
+            type="password"
+            placeholder="Пароль"
+            value={credentials.password}
+            onChange={handleChange}
+          />
+        </label>
+        <button type="submit">Войти</button>
+      </form>
     </div>
   );
 }

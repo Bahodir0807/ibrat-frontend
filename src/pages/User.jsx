@@ -12,7 +12,7 @@ export default function Users() {
     })
       .then((res) => res.json())
       .then((data) => {
-        setUsers(data);
+        setUsers(data.sort((a, b) => a.role.localeCompare(b.role)));
         setLoading(false);
       })
       .catch((err) => {
@@ -26,13 +26,22 @@ export default function Users() {
   return (
     <div>
       <h2>Все пользователи</h2>
-      <ul>
-        {users.map((user) => (
-          <li key={user._id}>
-            {user.username} — {user.role}
-          </li>
-        ))}
-      </ul>
+      <table border="1" cellPadding="5">
+        <thead>
+          <tr>
+            <th>Имя</th>
+            <th>Роль</th>
+          </tr>
+        </thead>
+        <tbody>
+          {users.map((user) => (
+            <tr key={user._id}>
+              <td>{user.username}</td>
+              <td>{user.role}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

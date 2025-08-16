@@ -7,15 +7,20 @@ export default function Home() {
 
   useEffect(() => {
     const token = localStorage.getItem("token");
-    const userRole = localStorage.getItem("role");
-    if (!token || !userRole) {
+    if (!token) {
       navigate("/login");
       return;
     }
-    setRole(userRole);
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      setRole(payload.role || "student");
+    } catch {
+      navigate("/login");
+    }
   }, [navigate]);
 
-  if (!role) return <p>Загрузка...</p>;
+  if (!role) return null;
 
   return (
     <div>

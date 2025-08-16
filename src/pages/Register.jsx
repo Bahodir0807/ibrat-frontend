@@ -41,7 +41,8 @@ export default function Register() {
         setPassword("");
         setRole("student");
         setRoleKey("");
-
+        setMessage("✅ Зарегистрирован!");
+        localStorage.setItem("role", role);
         navigate("/");
       } else {
         setMessage("❌ " + data.message);

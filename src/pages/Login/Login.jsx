@@ -17,7 +17,6 @@ export default function Login() {
       const token = data.token;
       localStorage.setItem("token", token);
 
-      // Декодируем payload JWT без внешних библиотек
       const payload = JSON.parse(atob(token.split(".")[1]));
       const role = payload.role || "student";
       localStorage.setItem("role", role);

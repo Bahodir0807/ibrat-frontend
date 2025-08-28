@@ -1,6 +1,11 @@
 import { useState } from "react";
 import axios from "axios";
 
+const API = axios.create({
+  baseURL: "https://b.sultonoway.uz",
+  withCredentials: true,
+});
+
 export default function Register() {
   const [form, setForm] = useState({
     username: "",
@@ -16,16 +21,21 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("/auth/register", form);
+      await API.post("/auth/register", form);
+      const res = await API.post("/auth/login", {
+        username: form.username,
+        password: form.password,
+      });
+      localStorage.setItem("token", res.data.token);
       setMessage("✅ Успешно зарегистрирован и вошёл");
     } catch (err) {
       if (err.response?.status === 400 || err.response?.status === 409) {
         try {
-          const res = await axios.post("/auth/login", {
+          const res = await API.post("/auth/login", {
             username: form.username,
             password: form.password,
           });
-          localStorage.setItem("token", res.data.access_token);
+          localStorage.setItem("token", res.data.token);
           setMessage("🔑 Уже был зарегистрирован — вошли");
         } catch (loginErr) {
           setMessage("❌ Ошибка входа: " + loginErr.response?.data?.message);
@@ -68,8 +78,8 @@ export default function Register() {
           onChange={handleChange}
           className="w-full p-2 border rounded"
         >
-          <option value="Student">Студент</option>
-          <option value="Guest">Гость</option>
+          <option value="student">Студент</option>
+          <option value="guest">Гость</option>
         </select>
 
         <button
@@ -78,6 +88,7 @@ export default function Register() {
         >
           Войти / Зарегистрироваться
         </button>
+
         {message && (
           <p className="text-center text-sm text-gray-700 mt-2">{message}</p>
         )}

@@ -22,27 +22,10 @@ export default function Register() {
     e.preventDefault();
     try {
       await API.post("/auth/register", form);
-      const res = await API.post("/auth/login", {
-        username: form.username,
-        password: form.password,
-      });
-      localStorage.setItem("token", res.data.token);
-      setMessage("✅ Успешно зарегистрирован и вошёл");
+      setMessage("✅ Успешно зарегистрирован!");
+      setForm({ username: "", password: "", role: "guest" });
     } catch (err) {
-      if (err.response?.status === 400 || err.response?.status === 409) {
-        try {
-          const res = await API.post("/auth/login", {
-            username: form.username,
-            password: form.password,
-          });
-          localStorage.setItem("token", res.data.token);
-          setMessage("🔑 Уже был зарегистрирован — вошли");
-        } catch (loginErr) {
-          setMessage("❌ Ошибка входа: " + loginErr.response?.data?.message);
-        }
-      } else {
-        setMessage("❌ Ошибка регистрации: " + err.response?.data?.message);
-      }
+      setMessage("❌ Ошибка регистрации: " + (err.response?.data?.message || "Неизвестная ошибка"));
     }
   };
 
@@ -52,7 +35,7 @@ export default function Register() {
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-xl p-6 w-96 space-y-4"
       >
-        <h1 className="text-2xl font-bold text-center">Регистрация / Логин</h1>
+        <h1 className="text-2xl font-bold text-center">Регистрация</h1>
 
         <input
           type="text"
@@ -86,7 +69,7 @@ export default function Register() {
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          Войти / Зарегистрироваться
+          Зарегистрироваться
         </button>
 
         {message && (

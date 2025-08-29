@@ -28,6 +28,9 @@ export default function Home() {
       {role === "teacher" && <p>Привет, учитель! Тут твой контент.</p>}
       {role === "admin" && <p>Привет, админ! Тут твой контент.</p>}
       {role === "panda" && <p>Привет, суперроль! Тут твой контент.</p>}
+      {role === "guest" && <p>Привет, гость! Тут твой контент.</p>}
+      <button onClick={() => navigate("/login")}>Выйти</button>
+      <button onClick={() => navigate("/users")}>Пользователи</button>
     </div>
   );
 }

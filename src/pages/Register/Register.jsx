@@ -29,52 +29,115 @@ export default function Register() {
     }
   };
 
+  const ui = {
+    page: {
+      minHeight: "100vh",
+      background: "#0f172a",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 16,
+      boxSizing: "border-box",
+    },
+    card: {
+      width: "100%",
+      maxWidth: 420,
+      background: "#0b1222",
+      border: "1px solid rgba(255,255,255,0.08)",
+      borderRadius: 16,
+      padding: 24,
+      boxShadow: "0 10px 25px rgba(0,0,0,0.35)",
+    },
+    title: {
+      margin: 0,
+      fontSize: 24,
+      fontWeight: 700,
+      color: "#e2e8f0",
+      textAlign: "center",
+    },
+    form: {
+      marginTop: 16,
+      display: "flex",
+      flexDirection: "column",
+      gap: 12,
+    },
+    input: {
+      background: "#0a1020",
+      border: "1px solid rgba(255,255,255,0.08)",
+      color: "#e2e8f0",
+      padding: "10px 12px",
+      borderRadius: 10,
+      outline: "none",
+      width: "100%",
+    },
+    select: {
+      background: "#0a1020",
+      border: "1px solid rgba(255,255,255,0.08)",
+      color: "#e2e8f0",
+      padding: "10px 12px",
+      borderRadius: 10,
+      outline: "none",
+      width: "100%",
+      cursor: "pointer",
+    },
+    button: {
+      marginTop: 4,
+      background: "linear-gradient(180deg,#3b82f6,#1d4ed8)",
+      color: "white",
+      border: "none",
+      padding: "10px 14px",
+      borderRadius: 10,
+      fontWeight: 600,
+      cursor: "pointer",
+      boxShadow: "0 6px 14px rgba(59,130,246,0.35)",
+      width: "100%",
+    },
+    message: {
+      textAlign: "center",
+      fontSize: 12,
+      color: "#94a3b8",
+      marginTop: 8,
+    },
+  };
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-xl p-6 w-96 space-y-4"
-      >
-        <h1 className="text-2xl font-bold text-center">Регистрация</h1>
+    <div style={ui.page}>
+      <form onSubmit={handleSubmit} style={ui.card}>
+        <h1 style={ui.title}>Регистрация</h1>
 
         <input
           type="text"
           name="username"
-          placeholder="Username"
+          placeholder="Имя пользователя"
           value={form.username}
           onChange={handleChange}
-          className="w-full p-2 border rounded"
+          style={ui.input}
+          autoComplete="username"
         />
 
         <input
           type="password"
           name="password"
-          placeholder="Password"
+          placeholder="Пароль"
           value={form.password}
           onChange={handleChange}
-          className="w-full p-2 border rounded"
+          style={ui.input}
+          autoComplete="new-password"
         />
 
         <select
           name="role"
           value={form.role}
           onChange={handleChange}
-          className="w-full p-2 border rounded"
+          style={ui.select}
         >
           <option value="student">Студент</option>
           <option value="guest">Гость</option>
         </select>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-        >
-          Зарегистрироваться
-        </button>
+        <button type="submit" style={ui.button}>Зарегистрироваться</button>
 
-        {message && (
-          <p className="text-center text-sm text-gray-700 mt-2">{message}</p>
-        )}
+        {message && <p style={ui.message}>{message}</p>}
       </form>
     </div>
   );

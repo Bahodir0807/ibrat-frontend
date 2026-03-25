@@ -1,144 +1,81 @@
 import { useState } from "react";
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "https://b.sultonoway.uz",
-  withCredentials: true,
-});
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 export default function Register() {
+  const navigate = useNavigate();
+  const { register } = useAuth();
   const [form, setForm] = useState({
     username: "",
     password: "",
     role: "guest",
   });
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setLoading(true);
+    setMessage("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
     try {
-      await API.post("/auth/register", form);
-      setMessage("✅ Успешно зарегистрирован!");
-      setForm({ username: "", password: "", role: "guest" });
-    } catch (err) {
-      setMessage("❌ Ошибка регистрации: " + (err.response?.data?.message || "Неизвестная ошибка"));
+      await register(form);
+      setMessage("Registration completed. You can sign in now.");
+      setTimeout(() => navigate("/login"), 700);
+    } catch (submitError) {
+      setMessage(submitError?.response?.data?.message || submitError?.message || "Registration failed");
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const ui = {
-    page: {
-      minHeight: "100vh",
-      background: "#0f172a",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: 16,
-      boxSizing: "border-box",
-    },
-    card: {
-      width: "100%",
-      maxWidth: 420,
-      background: "#0b1222",
-      border: "1px solid rgba(255,255,255,0.08)",
-      borderRadius: 16,
-      padding: 24,
-      boxShadow: "0 10px 25px rgba(0,0,0,0.35)",
-    },
-    title: {
-      margin: 0,
-      fontSize: 24,
-      fontWeight: 700,
-      color: "#e2e8f0",
-      textAlign: "center",
-    },
-    form: {
-      marginTop: 16,
-      display: "flex",
-      flexDirection: "column",
-      gap: 12,
-    },
-    input: {
-      background: "#0a1020",
-      border: "1px solid rgba(255,255,255,0.08)",
-      color: "#e2e8f0",
-      padding: "10px 12px",
-      borderRadius: 10,
-      outline: "none",
-      width: "100%",
-    },
-    select: {
-      background: "#0a1020",
-      border: "1px solid rgba(255,255,255,0.08)",
-      color: "#e2e8f0",
-      padding: "10px 12px",
-      borderRadius: 10,
-      outline: "none",
-      width: "100%",
-      cursor: "pointer",
-    },
-    button: {
-      marginTop: 4,
-      background: "linear-gradient(180deg,#3b82f6,#1d4ed8)",
-      color: "white",
-      border: "none",
-      padding: "10px 14px",
-      borderRadius: 10,
-      fontWeight: 600,
-      cursor: "pointer",
-      boxShadow: "0 6px 14px rgba(59,130,246,0.35)",
-      width: "100%",
-    },
-    message: {
-      textAlign: "center",
-      fontSize: 12,
-      color: "#94a3b8",
-      marginTop: 8,
-    },
-  };
+  }
 
   return (
-    <div style={ui.page}>
-      <form onSubmit={handleSubmit} style={ui.card}>
-        <h1 style={ui.title}>Регистрация</h1>
+    <div className="auth-page auth-page--register">
+      <div className="auth-panel">
+        <div className="auth-panel__intro">
+          <p className="eyebrow">Self registration</p>
+          <h1>Create a guest or student account</h1>
+          <p>
+            Public registration is limited to <code>guest</code> and <code>student</code>.
+          </p>
+        </div>
 
-        <input
-          type="text"
-          name="username"
-          placeholder="Имя пользователя"
-          value={form.username}
-          onChange={handleChange}
-          style={ui.input}
-          autoComplete="username"
-        />
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Пароль"
-          value={form.password}
-          onChange={handleChange}
-          style={ui.input}
-          autoComplete="new-password"
-        />
-
-        <select
-          name="role"
-          value={form.role}
-          onChange={handleChange}
-          style={ui.select}
-        >
-          <option value="student">Студент</option>
-          <option value="guest">Гость</option>
-        </select>
-
-        <button type="submit" style={ui.button}>Зарегистрироваться</button>
-
-        {message && <p style={ui.message}>{message}</p>}
-      </form>
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <label>
+            Username
+            <input
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              placeholder="Choose username"
+              autoComplete="username"
+            />
+          </label>
+          <label>
+            Password
+            <input
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              placeholder="Choose password"
+              autoComplete="new-password"
+            />
+          </label>
+          <label>
+            Role
+            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+              <option value="guest">Guest</option>
+              <option value="student">Student</option>
+            </select>
+          </label>
+          {message ? <div className="banner">{message}</div> : null}
+          <button className="button" type="submit" disabled={loading}>
+            {loading ? "Creating…" : "Create account"}
+          </button>
+          <p className="muted">
+            Already registered? <Link to="/login">Back to login</Link>
+          </p>
+        </form>
+      </div>
     </div>
   );
 }

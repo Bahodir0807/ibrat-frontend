@@ -2,9 +2,11 @@ import { useMemo } from "react";
 import { AppShell, SectionCard, StatStrip } from "../../components/AppShell";
 import RoleWorkspace from "../../components/RoleWorkspace";
 import { useAuth } from "../../context/AuthContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function GuestDashboard() {
   const { user } = useAuth();
+  const { t } = useI18n();
 
   const sections = useMemo(
     () => [
@@ -62,7 +64,7 @@ export default function GuestDashboard() {
   );
 
   return (
-    <AppShell title="Guest Dashboard" subtitle="Minimal cabinet with clear next step">
+    <AppShell title={t("guest.title", "Guest Dashboard")} subtitle={t("guest.subtitle", "Minimal cabinet with clear next step")}>
       <RoleWorkspace sections={sections} initialSection="overview" />
     </AppShell>
   );

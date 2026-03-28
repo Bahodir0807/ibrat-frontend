@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, DataTable, SectionCard, StatStrip } from "../../components/AppShell";
 import RoleWorkspace from "../../components/RoleWorkspace";
+import { useI18n } from "../../context/I18nContext";
 import {
   coursesApi,
+  groupsApi,
   paymentsApi,
   phoneRequestsApi,
   rolesApi,
@@ -11,7 +13,15 @@ import {
   statisticsApi,
   usersApi,
 } from "../../api/resources";
-import { formatDate, formatPerson, normalizeList } from "./helpers";
+import {
+  WEEKDAY_OPTIONS,
+  buildSchedulePayload,
+  formatDate,
+  formatPerson,
+  formatScheduleSlot,
+  formatWeekday,
+  normalizeList,
+} from "./helpers";
 
 const roleOptions = ["guest", "student", "teacher", "admin", "owner", "panda"];
 const roomTypes = ["classroom", "lab", "office", "meeting"];
@@ -35,10 +45,11 @@ const featurePresets = {
 };
 
 export default function ManagementDashboard({
-  title = "Management Dashboard",
-  subtitle = "Admin, owner and panda workspace",
+  title,
+  subtitle,
   variant = "admin",
 }) {
+  const { t } = useI18n();
   const features = featurePresets[variant] || featurePresets.admin;
   const [loading, setLoading] = useState(true);
   const [refreshIndex, setRefreshIndex] = useState(0);
@@ -47,6 +58,7 @@ export default function ManagementDashboard({
     users: [],
     students: [],
     courses: [],
+    groups: [],
     rooms: [],
     schedule: [],
     payments: [],
@@ -57,8 +69,9 @@ export default function ManagementDashboard({
 
   const [userDraft, setUserDraft] = useState({ username: "", password: "", role: "guest" });
   const [courseDraft, setCourseDraft] = useState({ name: "", description: "", price: "", teacherId: "" });
+  const [groupDraft, setGroupDraft] = useState({ name: "", course: "", teacher: "", students: [] });
   const [roomDraft, setRoomDraft] = useState({ name: "", capacity: "", type: "classroom", description: "" });
-  const [scheduleDraft, setScheduleDraft] = useState({ course: "", room: "", date: "", timeStart: "", timeEnd: "", teacher: "" });
+  const [scheduleDraft, setScheduleDraft] = useState({ course: "", room: "", group: "", weekday: "monday", timeStart: "", timeEnd: "", teacher: "" });
   const [paymentDraft, setPaymentDraft] = useState({ student: "", courseId: "", paidAt: "" });
   const [roleDraft, setRoleDraft] = useState({ name: "", permissions: "" });
   const [statDraft, setStatDraft] = useState({ type: "", value: "", date: "" });
@@ -75,6 +88,7 @@ export default function ManagementDashboard({
           usersApi.list(),
           usersApi.students(),
           coursesApi.list(),
+          groupsApi.list(),
           roomsApi.list(),
           scheduleApi.list(),
           paymentsApi.list(),
@@ -102,6 +116,7 @@ export default function ManagementDashboard({
           users,
           students,
           courses,
+          groups,
           rooms,
           schedule,
           payments,
@@ -115,6 +130,7 @@ export default function ManagementDashboard({
             users: normalizeList(users),
             students: normalizeList(students),
             courses: normalizeList(courses),
+            groups: normalizeList(groups),
             rooms: normalizeList(rooms),
             schedule: normalizeList(schedule),
             payments: normalizeList(payments),
@@ -164,6 +180,7 @@ export default function ManagementDashboard({
                 { label: "Users", value: dataset.users.length },
                 { label: "Students", value: dataset.students.length },
                 { label: "Courses", value: dataset.courses.length },
+                { label: "Groups", value: dataset.groups.length },
                 { label: "Rooms", value: dataset.rooms.length },
                 { label: "Payments", value: dataset.payments.length },
               ]}
@@ -175,7 +192,8 @@ export default function ManagementDashboard({
                   columns={[
                     { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
                     { key: "teacher", label: "Teacher", render: (row) => formatPerson(row.teacher) },
-                    { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+                    { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
+                    { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
                   ]}
                 />
               </SectionCard>
@@ -289,6 +307,57 @@ export default function ManagementDashboard({
         ),
       },
       {
+        key: "groups",
+        label: "Groups",
+        note: "Study teams",
+        description: "Create study groups and bind course, teacher and students.",
+        render: () => (
+          <div className="stack">
+            <SectionCard title="Create group" subtitle="Course cohort">
+              <form className="form-grid" onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit(
+                  groupsApi.create,
+                  groupDraft,
+                  () => setGroupDraft({ name: "", course: "", teacher: "", students: [] }),
+                );
+              }}>
+                <div className="form-row">
+                  <input value={groupDraft.name} onChange={(e) => setGroupDraft({ ...groupDraft, name: e.target.value })} placeholder="Group name" />
+                  <select value={groupDraft.course} onChange={(e) => setGroupDraft({ ...groupDraft, course: e.target.value })}>
+                    <option value="">Select course</option>
+                    {dataset.courses.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+                  </select>
+                  <select value={groupDraft.teacher} onChange={(e) => setGroupDraft({ ...groupDraft, teacher: e.target.value })}>
+                    <option value="">Select teacher</option>
+                    {dataset.users.filter((item) => item.role === "teacher").map((item) => <option key={item._id} value={item._id}>{formatPerson(item)}</option>)}
+                  </select>
+                  <select
+                    multiple
+                    value={groupDraft.students}
+                    onChange={(e) => setGroupDraft({ ...groupDraft, students: Array.from(e.target.selectedOptions).map((option) => option.value) })}
+                  >
+                    {dataset.students.map((item) => <option key={item._id} value={item._id}>{formatPerson(item)}</option>)}
+                  </select>
+                </div>
+                <button className="button" type="submit">Create group</button>
+              </form>
+            </SectionCard>
+            <SectionCard title="Group list" subtitle="Current study groups">
+              <DataTable
+                rows={dataset.groups}
+                columns={[
+                  { key: "name", label: "Group" },
+                  { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
+                  { key: "teacher", label: "Teacher", render: (row) => formatPerson(row.teacher) },
+                  { key: "students", label: "Students", render: (row) => Array.isArray(row.students) ? row.students.length : 0 },
+                ]}
+              />
+            </SectionCard>
+          </div>
+        ),
+      },
+      {
         key: "rooms",
         label: "Rooms",
         note: "Capacity and type",
@@ -341,8 +410,8 @@ export default function ManagementDashboard({
                 e.preventDefault();
                 handleSubmit(
                   scheduleApi.create,
-                  scheduleDraft,
-                  () => setScheduleDraft({ course: "", room: "", date: "", timeStart: "", timeEnd: "", teacher: "" }),
+                  buildSchedulePayload(scheduleDraft),
+                  () => setScheduleDraft({ course: "", room: "", group: "", weekday: "monday", timeStart: "", timeEnd: "", teacher: "" }),
                 );
               }}>
                 <div className="form-row">
@@ -358,9 +427,15 @@ export default function ManagementDashboard({
                     <option value="">Select teacher</option>
                     {dataset.users.filter((item) => item.role === "teacher").map((item) => <option key={item._id} value={item._id}>{formatPerson(item)}</option>)}
                   </select>
-                  <input type="datetime-local" value={scheduleDraft.date} onChange={(e) => setScheduleDraft({ ...scheduleDraft, date: e.target.value })} />
-                  <input type="datetime-local" value={scheduleDraft.timeStart} onChange={(e) => setScheduleDraft({ ...scheduleDraft, timeStart: e.target.value })} />
-                  <input type="datetime-local" value={scheduleDraft.timeEnd} onChange={(e) => setScheduleDraft({ ...scheduleDraft, timeEnd: e.target.value })} />
+                  <select value={scheduleDraft.group} onChange={(e) => setScheduleDraft({ ...scheduleDraft, group: e.target.value })}>
+                    <option value="">Select group</option>
+                    {dataset.groups.map((item) => <option key={item._id} value={item._id}>{item.name}</option>)}
+                  </select>
+                  <select value={scheduleDraft.weekday} onChange={(e) => setScheduleDraft({ ...scheduleDraft, weekday: e.target.value })}>
+                    {WEEKDAY_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
+                  </select>
+                  <input type="time" value={scheduleDraft.timeStart} onChange={(e) => setScheduleDraft({ ...scheduleDraft, timeStart: e.target.value })} />
+                  <input type="time" value={scheduleDraft.timeEnd} onChange={(e) => setScheduleDraft({ ...scheduleDraft, timeEnd: e.target.value })} />
                 </div>
                 <button className="button" type="submit">Create schedule</button>
               </form>
@@ -372,7 +447,8 @@ export default function ManagementDashboard({
                   { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
                   { key: "teacher", label: "Teacher", render: (row) => formatPerson(row.teacher) },
                   { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
-                  { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+                  { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
+                  { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
                 ]}
               />
             </SectionCard>
@@ -589,9 +665,13 @@ export default function ManagementDashboard({
   ]);
 
   return (
-    <AppShell title={title} subtitle={subtitle} actions={<button className="button" onClick={refresh}>Refresh all</button>}>
+    <AppShell
+      title={title || t("management.title", "Management Dashboard")}
+      subtitle={subtitle || t("management.subtitle", "Admin, owner and panda workspace")}
+      actions={<button className="button" onClick={refresh}>{t("common.refreshAll", "Refresh all")}</button>}
+    >
       {error ? <div className="banner banner--error">{error}</div> : null}
-      {loading ? <div className="empty-state">Loading workspace…</div> : null}
+      {loading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
       <RoleWorkspace sections={sections} initialSection="overview" />
     </AppShell>
   );

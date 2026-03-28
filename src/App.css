@@ -1,5 +1,10 @@
 :root {
   --bg-card: rgba(9, 18, 31, 0.88);
+  --bg-soft: rgba(255, 255, 255, 0.03);
+  --sidebar-bg: rgba(3, 9, 17, 0.82);
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --option-bg: #0c1728;
+  --option-text: #ecf3ff;
   --border: rgba(255, 255, 255, 0.09);
   --text: #ecf3ff;
   --muted: #98aec7;
@@ -8,6 +13,70 @@
   --accent-cool: #0d9488;
   --danger: #ef4444;
   --shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+  --body-bg:
+    radial-gradient(circle at top left, rgba(249, 115, 22, 0.14), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(13, 148, 136, 0.14), transparent 40%),
+    #07111f;
+}
+
+:root[data-theme="light"] {
+  --bg-card: rgba(255, 255, 255, 0.92);
+  --bg-soft: rgba(11, 28, 47, 0.04);
+  --sidebar-bg: rgba(242, 247, 252, 0.94);
+  --input-bg: rgba(255, 255, 255, 0.92);
+  --option-bg: #ffffff;
+  --option-text: #132235;
+  --border: rgba(11, 28, 47, 0.12);
+  --text: #132235;
+  --muted: #5d7288;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-cool: #0f766e;
+  --shadow: 0 18px 40px rgba(25, 50, 80, 0.12);
+  --body-bg:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.12), transparent 40%),
+    #eef5fb;
+}
+
+:root[data-theme="purple"] {
+  --bg-card: rgba(28, 18, 46, 0.9);
+  --bg-soft: rgba(255, 255, 255, 0.04);
+  --sidebar-bg: rgba(21, 11, 37, 0.88);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --option-bg: #1e1232;
+  --option-text: #f4ebff;
+  --border: rgba(222, 190, 255, 0.14);
+  --text: #f4ebff;
+  --muted: #c7b1e4;
+  --accent: #a855f7;
+  --accent-strong: #7e22ce;
+  --accent-cool: #ec4899;
+  --shadow: 0 22px 60px rgba(30, 10, 50, 0.34);
+  --body-bg:
+    radial-gradient(circle at top left, rgba(168, 85, 247, 0.18), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(236, 72, 153, 0.15), transparent 40%),
+    #120a21;
+}
+
+:root[data-theme="turquoise"] {
+  --bg-card: rgba(8, 31, 33, 0.9);
+  --bg-soft: rgba(255, 255, 255, 0.04);
+  --sidebar-bg: rgba(3, 24, 27, 0.88);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --option-bg: #0a2225;
+  --option-text: #e8fffb;
+  --border: rgba(136, 242, 231, 0.14);
+  --text: #e8fffb;
+  --muted: #97c8c3;
+  --accent: #14b8a6;
+  --accent-strong: #0f766e;
+  --accent-cool: #22c55e;
+  --shadow: 0 22px 60px rgba(0, 30, 26, 0.34);
+  --body-bg:
+    radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 35%),
+    radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 40%),
+    #061719;
 }
 
 code {
@@ -96,9 +165,38 @@ textarea {
   padding: 0.82rem 0.95rem;
   border-radius: 14px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--input-bg);
   color: var(--text);
   outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted) 50%),
+    linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position:
+    calc(100% - 20px) calc(50% - 3px),
+    calc(100% - 14px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 2.6rem;
+}
+
+select option,
+select optgroup {
+  background: var(--option-bg);
+  color: var(--option-text);
 }
 
 textarea {
@@ -118,7 +216,7 @@ textarea {
 }
 
 .button--ghost {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--bg-soft);
   color: var(--text);
   border: 1px solid var(--border);
   box-shadow: none;
@@ -155,7 +253,7 @@ textarea {
 .app-sidebar {
   padding: 1.35rem;
   border-right: 1px solid var(--border);
-  background: rgba(3, 9, 17, 0.82);
+  background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
   gap: 1.4rem;
@@ -188,7 +286,25 @@ textarea {
   padding: 0.8rem 0.95rem;
   border-radius: 14px;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-soft);
+}
+
+.preference-card {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--bg-soft);
+}
+
+.preference-card label {
+  gap: 0.35rem;
+}
+
+.preference-card span {
+  font-size: 0.86rem;
+  color: var(--muted);
 }
 
 .app-profile {
@@ -198,7 +314,7 @@ textarea {
   padding: 1rem;
   border-radius: 18px;
   border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-soft);
 }
 
 .app-profile__name {
@@ -325,7 +441,7 @@ textarea {
 
 .role-workspace__nav-item {
   border: 1px solid transparent;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--bg-soft);
   color: var(--text);
   border-radius: 16px;
   padding: 0.85rem 0.95rem;

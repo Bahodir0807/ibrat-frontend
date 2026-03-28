@@ -7,6 +7,8 @@ import {
   mockCoursesList,
   mockGradesCreate,
   mockGradesMine,
+  mockGroupsCreate,
+  mockGroupsList,
   mockHomeworkComplete,
   mockHomeworkCreate,
   mockHomeworkMine,
@@ -61,6 +63,11 @@ export const coursesApi = {
 export const roomsApi = {
   list: async () => withFallback(async () => (await API.get("/rooms")).data, mockRoomsList),
   create: async (payload) => withFallback(async () => (await API.post("/rooms", payload)).data, () => mockRoomsCreate(payload)),
+};
+
+export const groupsApi = {
+  list: async () => withFallback(async () => (await API.get("/groups")).data, mockGroupsList),
+  create: async (payload) => withFallback(async () => (await API.post("/groups", payload)).data, () => mockGroupsCreate(payload)),
 };
 
 export const scheduleApi = {

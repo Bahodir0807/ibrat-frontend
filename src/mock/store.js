@@ -60,6 +60,20 @@ const DEFAULT_DB = {
       description: "Main classroom",
     },
   ],
+  groups: [
+    {
+      _id: "group_mock_1",
+      name: "Foundation A",
+      course: { _id: "course_mock_1", name: "English Foundations" },
+      teacher: {
+        _id: "user_teacher_mock",
+        username: "teacher_demo",
+        firstName: "Amina",
+        lastName: "Teacher",
+      },
+      students: [{ _id: "user_student_mock", username: "student_demo" }],
+    },
+  ],
   schedule: [
     {
       _id: "schedule_mock_1",
@@ -71,7 +85,9 @@ const DEFAULT_DB = {
         firstName: "Amina",
         lastName: "Teacher",
       },
+      group: { _id: "group_mock_1", name: "Foundation A" },
       students: [{ _id: "user_student_mock", username: "student_demo" }],
+      weekday: "monday",
       date: new Date().toISOString(),
       timeStart: new Date().toISOString(),
       timeEnd: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
@@ -293,6 +309,32 @@ export async function mockRoomsCreate(payload) {
   return delay(room);
 }
 
+export async function mockGroupsList() {
+  return delay(readDb().groups || []);
+}
+
+export async function mockGroupsCreate(payload) {
+  const db = readDb();
+  const course = db.courses.find((item) => item._id === payload.course);
+  const teacher = db.users.find((item) => item.id === payload.teacher);
+  const students = db.users
+    .filter((item) => (payload.students || []).includes(item.id))
+    .map(sanitizeUser);
+
+  const group = {
+    _id: `group_${Date.now()}`,
+    name: payload.name,
+    course: course || { _id: payload.course, name: "Unknown course" },
+    teacher: teacher ? sanitizeUser(teacher) : { _id: payload.teacher, username: "teacher" },
+    students,
+  };
+
+  db.groups ??= [];
+  db.groups.push(group);
+  writeDb(db);
+  return delay(group);
+}
+
 export async function mockScheduleList() {
   return delay(readDb().schedule);
 }
@@ -322,7 +364,11 @@ export async function mockScheduleCreate(payload) {
     course: course || { _id: payload.course, name: "Unknown course" },
     room: room || { _id: payload.room, name: "Unknown room" },
     teacher: teacher ? sanitizeUser(teacher) : { _id: payload.teacher, username: "teacher" },
+    group: payload.group
+      ? db.groups?.find((entry) => entry._id === payload.group) || { _id: payload.group, name: "Unknown group" }
+      : null,
     students: [],
+    weekday: payload.weekday,
     date: payload.date,
     timeStart: payload.timeStart,
     timeEnd: payload.timeEnd,

@@ -1,17 +1,13 @@
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-
-const roleTitles = {
-  owner: "Owner",
-  admin: "Admin",
-  panda: "Panda",
-  teacher: "Teacher",
-  student: "Student",
-  guest: "Guest",
-};
+import { useTheme } from "../context/ThemeContext";
+import { useI18n } from "../context/I18nContext";
 
 export function AppShell({ title, subtitle, actions, children }) {
   const { role, user, logout, isMockSession } = useAuth();
+  const { theme, themes, setTheme } = useTheme();
+  const { language, languages, setLanguage, t, tx } = useI18n();
+  const roleTitle = t(`roles.${role}`, role || "Guest");
 
   return (
     <div className="app-shell">
@@ -20,23 +16,46 @@ export function AppShell({ title, subtitle, actions, children }) {
           <div className="app-brand__badge">IB</div>
           <div>
             <h1>Ibrat Panel</h1>
-            <p>Connected to backend</p>
+            <p>{t("brand.connected", "Connected to backend")}</p>
           </div>
         </div>
 
         <nav className="app-nav">
-          <Link to="/">Dashboard</Link>
-          <Link to="/users">Users</Link>
-          <Link to="/login">Login</Link>
-          <Link to="/register">Register</Link>
+          <Link to="/">{t("nav.dashboard", "Dashboard")}</Link>
+          <Link to="/users">{t("nav.users", "Users")}</Link>
+          <Link to="/login">{t("nav.login", "Login")}</Link>
+          <Link to="/register">{t("nav.register", "Register")}</Link>
         </nav>
 
+        <div className="preference-card">
+          <label>
+            <span>{t("theme.label", "Theme")}</span>
+            <select value={theme} onChange={(event) => setTheme(event.target.value)}>
+              {themes.map((item) => (
+                <option key={item} value={item}>
+                  {t(`theme.${item}`, item)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            <span>{t("lang.label", "Language")}</span>
+            <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+              {languages.map((item) => (
+                <option key={item} value={item}>
+                  {t(`lang.${item}`, item)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div className="app-profile">
-          <div className="app-profile__label">Signed in as</div>
+          <div className="app-profile__label">{t("profile.signedInAs", "Signed in as")}</div>
           <div className="app-profile__name">{user?.username || "Unknown user"}</div>
-          <div className="app-profile__role">{roleTitles[role] || role || "Guest"}</div>
+          <div className="app-profile__role">{roleTitle}</div>
           <button className="button button--ghost" onClick={logout}>
-            Logout
+            {t("common.logout", "Logout")}
           </button>
         </div>
       </aside>
@@ -44,15 +63,15 @@ export function AppShell({ title, subtitle, actions, children }) {
       <main className="app-main">
         <header className="app-header">
           <div>
-            <p className="eyebrow">{roleTitles[role] || "Role"}</p>
-            <h2>{title}</h2>
-            {subtitle ? <p className="muted">{subtitle}</p> : null}
+            <p className="eyebrow">{roleTitle}</p>
+            <h2>{tx(title)}</h2>
+            {subtitle ? <p className="muted">{tx(subtitle)}</p> : null}
           </div>
           <div className="app-header__actions">{actions}</div>
         </header>
         {isMockSession ? (
           <div className="banner">
-            Mock mode is active. The frontend is running without backend and stores data in localStorage.
+            {t("banner.mock", "Mock mode is active. The frontend is running without backend and stores data in localStorage.")}
           </div>
         ) : null}
         {children}
@@ -95,8 +114,10 @@ export function EmptyState({ text }) {
 }
 
 export function DataTable({ columns, rows, emptyText = "No data yet" }) {
+  const { t, tx } = useI18n();
+
   if (!rows?.length) {
-    return <EmptyState text={emptyText} />;
+    return <EmptyState text={tx(emptyText || t("common.noData", "No data yet"))} />;
   }
 
   return (
@@ -105,7 +126,7 @@ export function DataTable({ columns, rows, emptyText = "No data yet" }) {
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column.key}>{column.label}</th>
+              <th key={column.key}>{tx(column.label)}</th>
             ))}
           </tr>
         </thead>

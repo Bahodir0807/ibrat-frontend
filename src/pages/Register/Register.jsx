@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function Register() {
   const navigate = useNavigate();
   const { register } = useAuth();
+  const { t } = useI18n();
   const [form, setForm] = useState({
     username: "",
     password: "",
@@ -20,7 +22,7 @@ export default function Register() {
 
     try {
       await register(form);
-      setMessage("Registration completed. You can sign in now.");
+      setMessage(t("auth.registrationSuccess", "Registration completed. You can sign in now."));
       setTimeout(() => navigate("/login"), 700);
     } catch (submitError) {
       setMessage(submitError?.response?.data?.message || submitError?.message || "Registration failed");
@@ -33,46 +35,45 @@ export default function Register() {
     <div className="auth-page auth-page--register">
       <div className="auth-panel">
         <div className="auth-panel__intro">
-          <p className="eyebrow">Self registration</p>
-          <h1>Create a guest or student account</h1>
-          <p>
-            Public registration is limited to <code>guest</code> and <code>student</code>.
-          </p>
+          <p className="eyebrow">{t("auth.selfRegistration", "Self registration")}</p>
+          <h1>{t("auth.registerTitle", "Create a guest or student account")}</h1>
+          <p>{t("auth.registerSubtitle", "Public registration is limited to guest and student.")}</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
-            Username
+            {t("auth.username", "Username")}
             <input
               value={form.username}
-              onChange={(e) => setForm({ ...form, username: e.target.value })}
-              placeholder="Choose username"
+              onChange={(event) => setForm({ ...form, username: event.target.value })}
+              placeholder={t("auth.username", "Username")}
               autoComplete="username"
             />
           </label>
           <label>
-            Password
+            {t("auth.password", "Password")}
             <input
               type="password"
               value={form.password}
-              onChange={(e) => setForm({ ...form, password: e.target.value })}
-              placeholder="Choose password"
+              onChange={(event) => setForm({ ...form, password: event.target.value })}
+              placeholder={t("auth.password", "Password")}
               autoComplete="new-password"
             />
           </label>
           <label>
-            Role
-            <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-              <option value="guest">Guest</option>
-              <option value="student">Student</option>
+            {t("auth.role", "Role")}
+            <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
+              <option value="guest">{t("roles.guest", "Guest")}</option>
+              <option value="student">{t("roles.student", "Student")}</option>
             </select>
           </label>
           {message ? <div className="banner">{message}</div> : null}
           <button className="button" type="submit" disabled={loading}>
-            {loading ? "Creating…" : "Create account"}
+            {loading ? t("auth.creating", "Creating...") : t("auth.createAccount", "Create account")}
           </button>
           <p className="muted">
-            Already registered? <Link to="/login">Back to login</Link>
+            {t("auth.alreadyRegistered", "Already registered?")}{" "}
+            <Link to="/login">{t("auth.backToLogin", "Back to login")}</Link>
           </p>
         </form>
       </div>

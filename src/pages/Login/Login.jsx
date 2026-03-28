@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { useI18n } from "../../context/I18nContext";
 
 export default function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+  const { t } = useI18n();
   const [credentials, setCredentials] = useState({ username: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,37 +39,34 @@ export default function Login() {
     <div className="auth-page auth-page--login">
       <div className="auth-panel">
         <div className="auth-panel__intro">
-          <p className="eyebrow">Ibrat Frontend</p>
-          <h1>Sign in to your dashboard</h1>
-          <p>
-            The app is connected to the backend and hydrates the session from{" "}
-            <code>/auth/me</code> right after login.
-          </p>
+          <p className="eyebrow">{t("auth.frontend", "Ibrat Frontend")}</p>
+          <h1>{t("auth.loginTitle", "Sign in to your dashboard")}</h1>
+          <p>{t("auth.loginSubtitle", "The app is connected to the backend and hydrates the session from /auth/me right after login.")}</p>
         </div>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           <label>
-            Username
+            {t("auth.username", "Username")}
             <input
               value={credentials.username}
-              onChange={(e) => setCredentials({ ...credentials, username: e.target.value })}
-              placeholder="owner, admin, student..."
+              onChange={(event) => setCredentials({ ...credentials, username: event.target.value })}
+              placeholder={t("auth.usernamePlaceholder", "owner, admin, student...")}
               autoComplete="username"
             />
           </label>
           <label>
-            Password
+            {t("auth.password", "Password")}
             <input
               type="password"
               value={credentials.password}
-              onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
-              placeholder="Your password"
+              onChange={(event) => setCredentials({ ...credentials, password: event.target.value })}
+              placeholder={t("auth.passwordPlaceholder", "Your password")}
               autoComplete="current-password"
             />
           </label>
           {error ? <div className="banner banner--error">{error}</div> : null}
           <button className="button" type="submit" disabled={loading}>
-            {loading ? "Signing in…" : "Sign in"}
+            {loading ? t("auth.signingIn", "Signing in...") : t("auth.signIn", "Sign in")}
           </button>
           <button
             className="button button--ghost"
@@ -78,14 +77,14 @@ export default function Login() {
               handleLogin(tempOwnerCredentials);
             }}
           >
-            Quick login as temp owner
+            {t("auth.quickLogin", "Quick login as owner")}
           </button>
           <p className="muted">
-            Temp test account: <code>{tempOwnerCredentials.username}</code> /{" "}
+            {t("auth.tempAccount", "Temp test account")}: <code>{tempOwnerCredentials.username}</code> /{" "}
             <code>{tempOwnerCredentials.password}</code>
           </p>
           <p className="muted">
-            No account yet? <Link to="/register">Create one</Link>
+            {t("auth.noAccount", "No account yet?")} <Link to="/register">{t("auth.createOne", "Create one")}</Link>
           </p>
         </form>
       </div>

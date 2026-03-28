@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { useI18n } from "../context/I18nContext";
 
 export default function RoleWorkspace({ sections, initialSection, renderHeaderAside }) {
   const normalizedSections = useMemo(() => sections.filter(Boolean), [sections]);
   const [active, setActive] = useState(initialSection || normalizedSections[0]?.key);
   const current = normalizedSections.find((section) => section.key === active) || normalizedSections[0];
+  const { t, tx } = useI18n();
 
   if (!current) {
     return null;
@@ -13,8 +15,8 @@ export default function RoleWorkspace({ sections, initialSection, renderHeaderAs
     <div className="role-workspace">
       <aside className="role-workspace__sidebar">
         <div className="role-workspace__sidebar-head">
-          <p className="eyebrow">Departments</p>
-          <h3>Sections</h3>
+          <p className="eyebrow">{t("workspace.departments", "Departments")}</p>
+          <h3>{t("workspace.sections", "Sections")}</h3>
         </div>
         <div className="role-workspace__nav">
           {normalizedSections.map((section) => (
@@ -24,8 +26,8 @@ export default function RoleWorkspace({ sections, initialSection, renderHeaderAs
               className={`role-workspace__nav-item ${section.key === current.key ? "is-active" : ""}`}
               onClick={() => setActive(section.key)}
             >
-              <span>{section.label}</span>
-              {section.note ? <small>{section.note}</small> : null}
+              <span>{tx(section.label)}</span>
+              {section.note ? <small>{tx(section.note)}</small> : null}
             </button>
           ))}
         </div>
@@ -34,9 +36,9 @@ export default function RoleWorkspace({ sections, initialSection, renderHeaderAs
       <div className="role-workspace__content">
         <div className="role-workspace__content-head">
           <div>
-            <p className="eyebrow">Department</p>
-            <h3>{current.label}</h3>
-            {current.description ? <p className="muted">{current.description}</p> : null}
+            <p className="eyebrow">{t("workspace.department", "Department")}</p>
+            <h3>{tx(current.label)}</h3>
+            {current.description ? <p className="muted">{tx(current.description)}</p> : null}
           </div>
           {renderHeaderAside ? renderHeaderAside(current) : null}
         </div>

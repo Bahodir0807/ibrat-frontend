@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AppShell, DataTable, SectionCard, StatStrip } from "../../components/AppShell";
 import RoleWorkspace from "../../components/RoleWorkspace";
+import { useI18n } from "../../context/I18nContext";
 import {
   attendanceApi,
   gradesApi,
@@ -9,11 +10,12 @@ import {
   scheduleApi,
   usersApi,
 } from "../../api/resources";
-import { formatDate, formatPerson, normalizeList, splitTasks } from "./helpers";
+import { formatPerson, formatScheduleSlot, formatWeekday, normalizeList, splitTasks } from "./helpers";
 
 const notificationTypes = ["payment", "homework", "grades", "attendance", "general"];
 
 export default function TeacherDashboard() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshIndex, setRefreshIndex] = useState(0);
@@ -87,7 +89,8 @@ export default function TeacherDashboard() {
                 columns={[
                   { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
                   { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
-                  { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+                  { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
+                  { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
                 ]}
               />
             </SectionCard>
@@ -239,7 +242,8 @@ export default function TeacherDashboard() {
               columns={[
                 { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
                 { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
-                { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+                { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
+                { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
               ]}
             />
           </SectionCard>
@@ -250,9 +254,13 @@ export default function TeacherDashboard() {
   );
 
   return (
-    <AppShell title="Teacher Dashboard" subtitle="Attendance, homework, grades, notifications and schedule" actions={<button className="button" onClick={() => setRefreshIndex((value) => value + 1)}>Refresh all</button>}>
+    <AppShell
+      title={t("teacher.title", "Teacher Dashboard")}
+      subtitle={t("teacher.subtitle", "Attendance, homework, grades, notifications and schedule")}
+      actions={<button className="button" onClick={() => setRefreshIndex((value) => value + 1)}>{t("common.refreshAll", "Refresh all")}</button>}
+    >
       {error ? <div className="banner banner--error">{error}</div> : null}
-      {loading ? <div className="empty-state">Loading workspace…</div> : null}
+      {loading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
       <RoleWorkspace sections={sections} initialSection="overview" />
     </AppShell>
   );

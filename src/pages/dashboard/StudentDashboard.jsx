@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell, DataTable, SectionCard, StatStrip } from "../../components/AppShell";
 import RoleWorkspace from "../../components/RoleWorkspace";
 import { attendanceApi, gradesApi, homeworkApi, paymentsApi, scheduleApi } from "../../api/resources";
-import { formatDate, normalizeList } from "./helpers";
+import { formatDate, formatScheduleSlot, formatWeekday, normalizeList } from "./helpers";
+import { useI18n } from "../../context/I18nContext";
 
 export default function StudentDashboard() {
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [refreshIndex, setRefreshIndex] = useState(0);
@@ -83,7 +85,8 @@ export default function StudentDashboard() {
             <DataTable rows={schedule} columns={[
               { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
               { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
-              { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+              { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
+              { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
             ]} />
           </SectionCard>
         ),
@@ -152,9 +155,13 @@ export default function StudentDashboard() {
   );
 
   return (
-    <AppShell title="Student Dashboard" subtitle="Personal cabinet with separate sections" actions={<button className="button" onClick={() => setRefreshIndex((value) => value + 1)}>Refresh all</button>}>
+    <AppShell
+      title={t("student.title", "Student Dashboard")}
+      subtitle={t("student.subtitle", "Personal cabinet with separate sections")}
+      actions={<button className="button" onClick={() => setRefreshIndex((value) => value + 1)}>{t("common.refreshAll", "Refresh all")}</button>}
+    >
       {error ? <div className="banner banner--error">{error}</div> : null}
-      {loading ? <div className="empty-state">Loading workspace…</div> : null}
+      {loading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
       <RoleWorkspace sections={sections} initialSection="overview" />
     </AppShell>
   );

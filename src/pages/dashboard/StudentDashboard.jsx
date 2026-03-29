@@ -82,12 +82,16 @@ export default function StudentDashboard() {
         description: "Your classes and room allocations.",
         render: () => (
           <SectionCard title="My schedule" subtitle="From /schedule/me">
-            <DataTable rows={schedule} columns={[
-              { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
-              { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
-              { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
-              { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
-            ]} />
+            <DataTable
+              rows={schedule}
+              columns={[
+                { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
+                { key: "group", label: "Group", render: (row) => row.group?.name || "—" },
+                { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
+                { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
+                { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
+              ]}
+            />
           </SectionCard>
         ),
       },
@@ -98,11 +102,14 @@ export default function StudentDashboard() {
         description: "All current homework assignments.",
         render: () => (
           <SectionCard title="Homework" subtitle="From /homework/me">
-            <DataTable rows={homework} columns={[
-              { key: "date", label: "Date", render: (row) => formatDate(row.date) },
-              { key: "tasks", label: "Tasks", render: (row) => Array.isArray(row.tasks) ? row.tasks.join(", ") : "—" },
-              { key: "completed", label: "Done", render: (row) => row.completed ? "Yes" : "No" },
-            ]} />
+            <DataTable
+              rows={homework}
+              columns={[
+                { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+                { key: "tasks", label: "Tasks", render: (row) => Array.isArray(row.tasks) ? row.tasks.join(", ") : "—" },
+                { key: "completed", label: "Done", render: (row) => row.completed ? "Yes" : "No" },
+              ]}
+            />
           </SectionCard>
         ),
       },
@@ -113,11 +120,14 @@ export default function StudentDashboard() {
         description: "Received grades by subject.",
         render: () => (
           <SectionCard title="Grades" subtitle="From /grades/me">
-            <DataTable rows={grades} columns={[
-              { key: "subject", label: "Subject" },
-              { key: "score", label: "Score" },
-              { key: "date", label: "Date", render: (row) => formatDate(row.date) },
-            ]} />
+            <DataTable
+              rows={grades}
+              columns={[
+                { key: "subject", label: "Subject" },
+                { key: "score", label: "Score" },
+                { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+              ]}
+            />
           </SectionCard>
         ),
       },
@@ -128,10 +138,13 @@ export default function StudentDashboard() {
         description: "Your attendance history.",
         render: () => (
           <SectionCard title="Attendance" subtitle="From /attendance/me">
-            <DataTable rows={attendance} columns={[
-              { key: "date", label: "Date", render: (row) => formatDate(row.date) },
-              { key: "status", label: "Status" },
-            ]} />
+            <DataTable
+              rows={attendance}
+              columns={[
+                { key: "date", label: "Date", render: (row) => formatDate(row.date) },
+                { key: "status", label: "Status" },
+              ]}
+            />
           </SectionCard>
         ),
       },
@@ -142,11 +155,14 @@ export default function StudentDashboard() {
         description: "Your payment records and confirmation states.",
         render: () => (
           <SectionCard title="Payments" subtitle="From /payments/me">
-            <DataTable rows={payments} columns={[
-              { key: "amount", label: "Amount" },
-              { key: "paidAt", label: "Paid at", render: (row) => formatDate(row.paidAt) },
-              { key: "isConfirmed", label: "Confirmed", render: (row) => row.isConfirmed ? "Yes" : "Pending" },
-            ]} />
+            <DataTable
+              rows={payments}
+              columns={[
+                { key: "amount", label: "Amount" },
+                { key: "paidAt", label: "Paid at", render: (row) => formatDate(row.paidAt) },
+                { key: "isConfirmed", label: "Confirmed", render: (row) => row.isConfirmed ? "Yes" : "Pending" },
+              ]}
+            />
           </SectionCard>
         ),
       },

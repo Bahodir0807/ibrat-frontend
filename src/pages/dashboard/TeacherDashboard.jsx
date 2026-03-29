@@ -21,6 +21,7 @@ export default function TeacherDashboard() {
   const [refreshIndex, setRefreshIndex] = useState(0);
   const [students, setStudents] = useState([]);
   const [schedule, setSchedule] = useState([]);
+  const [gradeRecords, setGradeRecords] = useState([]);
   const [attendanceDraft, setAttendanceDraft] = useState({ userId: "", date: "", status: "present" });
   const [homeworkDraft, setHomeworkDraft] = useState({ userId: "", date: "", tasks: "" });
   const [gradeDraft, setGradeDraft] = useState({ userId: "", subject: "", score: "" });
@@ -37,6 +38,7 @@ export default function TeacherDashboard() {
           usersApi.students(),
           scheduleApi.mine(),
         ]);
+
         if (!cancelled) {
           setStudents(normalizeList(studentsData));
           setSchedule(normalizeList(scheduleData));
@@ -55,6 +57,33 @@ export default function TeacherDashboard() {
       cancelled = true;
     };
   }, [refreshIndex]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadGrades() {
+      if (!gradeDraft.userId) {
+        setGradeRecords([]);
+        return;
+      }
+
+      try {
+        const data = await gradesApi.byUser(gradeDraft.userId);
+        if (!cancelled) {
+          setGradeRecords(normalizeList(data));
+        }
+      } catch {
+        if (!cancelled) {
+          setGradeRecords([]);
+        }
+      }
+    }
+
+    loadGrades();
+    return () => {
+      cancelled = true;
+    };
+  }, [gradeDraft.userId, refreshIndex]);
 
   async function handleAction(action, payload, reset) {
     try {
@@ -88,6 +117,7 @@ export default function TeacherDashboard() {
                 rows={schedule}
                 columns={[
                   { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
+                  { key: "group", label: "Group", render: (row) => row.group?.name || "—" },
                   { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
                   { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
                   { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },
@@ -122,17 +152,17 @@ export default function TeacherDashboard() {
         description: "Mark attendance for a single student and date.",
         render: () => (
           <SectionCard title="Mark attendance" subtitle="One record per request">
-            <form className="form-grid" onSubmit={(e) => {
-              e.preventDefault();
+            <form className="form-grid" onSubmit={(event) => {
+              event.preventDefault();
               handleAction(attendanceApi.create, attendanceDraft, () => setAttendanceDraft({ userId: "", date: "", status: "present" }));
             }}>
               <div className="form-row">
-                <select value={attendanceDraft.userId} onChange={(e) => setAttendanceDraft({ ...attendanceDraft, userId: e.target.value })}>
+                <select value={attendanceDraft.userId} onChange={(event) => setAttendanceDraft({ ...attendanceDraft, userId: event.target.value })}>
                   <option value="">Select student</option>
                   {students.map((student) => <option key={student._id} value={student._id}>{formatPerson(student)}</option>)}
                 </select>
-                <input type="datetime-local" value={attendanceDraft.date} onChange={(e) => setAttendanceDraft({ ...attendanceDraft, date: e.target.value })} />
-                <select value={attendanceDraft.status} onChange={(e) => setAttendanceDraft({ ...attendanceDraft, status: e.target.value })}>
+                <input type="datetime-local" value={attendanceDraft.date} onChange={(event) => setAttendanceDraft({ ...attendanceDraft, date: event.target.value })} />
+                <select value={attendanceDraft.status} onChange={(event) => setAttendanceDraft({ ...attendanceDraft, status: event.target.value })}>
                   <option value="present">Present</option>
                   <option value="absent">Absent</option>
                   <option value="late">Late</option>
@@ -151,8 +181,8 @@ export default function TeacherDashboard() {
         description: "Assign homework to one student at a time.",
         render: () => (
           <SectionCard title="Assign homework" subtitle="Split tasks by line">
-            <form className="form-grid" onSubmit={(e) => {
-              e.preventDefault();
+            <form className="form-grid" onSubmit={(event) => {
+              event.preventDefault();
               handleAction(
                 homeworkApi.create,
                 { ...homeworkDraft, tasks: splitTasks(homeworkDraft.tasks) },
@@ -160,13 +190,13 @@ export default function TeacherDashboard() {
               );
             }}>
               <div className="form-row">
-                <select value={homeworkDraft.userId} onChange={(e) => setHomeworkDraft({ ...homeworkDraft, userId: e.target.value })}>
+                <select value={homeworkDraft.userId} onChange={(event) => setHomeworkDraft({ ...homeworkDraft, userId: event.target.value })}>
                   <option value="">Select student</option>
                   {students.map((student) => <option key={student._id} value={student._id}>{formatPerson(student)}</option>)}
                 </select>
-                <input type="datetime-local" value={homeworkDraft.date} onChange={(e) => setHomeworkDraft({ ...homeworkDraft, date: e.target.value })} />
+                <input type="datetime-local" value={homeworkDraft.date} onChange={(event) => setHomeworkDraft({ ...homeworkDraft, date: event.target.value })} />
               </div>
-              <textarea value={homeworkDraft.tasks} onChange={(e) => setHomeworkDraft({ ...homeworkDraft, tasks: e.target.value })} placeholder={"Task 1\nTask 2"} />
+              <textarea value={homeworkDraft.tasks} onChange={(event) => setHomeworkDraft({ ...homeworkDraft, tasks: event.target.value })} placeholder={"Task 1\nTask 2"} />
               <button className="button" type="submit">Create homework</button>
             </form>
           </SectionCard>
@@ -176,28 +206,56 @@ export default function TeacherDashboard() {
         key: "grades",
         label: "Grades",
         note: "Assessment",
-        description: "Send a grade entry to one student.",
+        description: "Create and update grade entries for a selected student.",
         render: () => (
-          <SectionCard title="Add grade" subtitle="Direct scoring input">
-            <form className="form-grid" onSubmit={(e) => {
-              e.preventDefault();
-              handleAction(
-                gradesApi.create,
-                { ...gradeDraft, score: Number(gradeDraft.score) },
-                () => setGradeDraft({ userId: "", subject: "", score: "" }),
-              );
-            }}>
-              <div className="form-row">
-                <select value={gradeDraft.userId} onChange={(e) => setGradeDraft({ ...gradeDraft, userId: e.target.value })}>
-                  <option value="">Select student</option>
-                  {students.map((student) => <option key={student._id} value={student._id}>{formatPerson(student)}</option>)}
-                </select>
-                <input value={gradeDraft.subject} onChange={(e) => setGradeDraft({ ...gradeDraft, subject: e.target.value })} placeholder="Subject" />
-                <input type="number" min="0" value={gradeDraft.score} onChange={(e) => setGradeDraft({ ...gradeDraft, score: e.target.value })} placeholder="Score" />
-              </div>
-              <button className="button" type="submit">Create grade</button>
-            </form>
-          </SectionCard>
+          <div className="stack">
+            <SectionCard title="Add grade" subtitle="Direct scoring input">
+              <form className="form-grid" onSubmit={(event) => {
+                event.preventDefault();
+                handleAction(
+                  gradesApi.create,
+                  { ...gradeDraft, score: Number(gradeDraft.score) },
+                  () => setGradeDraft({ userId: gradeDraft.userId, subject: "", score: "" }),
+                );
+              }}>
+                <div className="form-row">
+                  <select value={gradeDraft.userId} onChange={(event) => setGradeDraft({ ...gradeDraft, userId: event.target.value })}>
+                    <option value="">Select student</option>
+                    {students.map((student) => <option key={student._id} value={student._id}>{formatPerson(student)}</option>)}
+                  </select>
+                  <input value={gradeDraft.subject} onChange={(event) => setGradeDraft({ ...gradeDraft, subject: event.target.value })} placeholder="Subject" />
+                  <input type="number" min="0" value={gradeDraft.score} onChange={(event) => setGradeDraft({ ...gradeDraft, score: event.target.value })} placeholder="Score" />
+                </div>
+                <button className="button" type="submit">Create grade</button>
+              </form>
+            </SectionCard>
+            <SectionCard title="Student grades" subtitle="Editable score history for selected student">
+              <DataTable
+                rows={gradeRecords}
+                columns={[
+                  { key: "subject", label: "Subject" },
+                  { key: "score", label: "Score" },
+                  { key: "date", label: "Date", render: (row) => row.date ? new Date(row.date).toLocaleString() : "-" },
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    render: (row) => (
+                      <button
+                        className="button button--ghost"
+                        onClick={() => {
+                          const nextScore = window.prompt("New score", String(row.score ?? ""));
+                          if (nextScore === null || nextScore === "") return;
+                          handleAction(() => gradesApi.update(row._id, { score: Number(nextScore) }));
+                        }}
+                      >
+                        Edit
+                      </button>
+                    ),
+                  },
+                ]}
+              />
+            </SectionCard>
+          </div>
         ),
       },
       {
@@ -207,8 +265,8 @@ export default function TeacherDashboard() {
         description: "Send a direct Telegram notification through the backend.",
         render: () => (
           <SectionCard title="Send notification" subtitle="Admin/teacher notification endpoint">
-            <form className="form-grid" onSubmit={(e) => {
-              e.preventDefault();
+            <form className="form-grid" onSubmit={(event) => {
+              event.preventDefault();
               handleAction(
                 notificationsApi.create,
                 notificationDraft,
@@ -216,15 +274,15 @@ export default function TeacherDashboard() {
               );
             }}>
               <div className="form-row">
-                <select value={notificationDraft.userId} onChange={(e) => setNotificationDraft({ ...notificationDraft, userId: e.target.value })}>
+                <select value={notificationDraft.userId} onChange={(event) => setNotificationDraft({ ...notificationDraft, userId: event.target.value })}>
                   <option value="">Select student</option>
                   {students.map((student) => <option key={student._id} value={student._id}>{formatPerson(student)}</option>)}
                 </select>
-                <select value={notificationDraft.type} onChange={(e) => setNotificationDraft({ ...notificationDraft, type: e.target.value })}>
+                <select value={notificationDraft.type} onChange={(event) => setNotificationDraft({ ...notificationDraft, type: event.target.value })}>
                   {notificationTypes.map((item) => <option key={item} value={item}>{item}</option>)}
                 </select>
               </div>
-              <textarea value={notificationDraft.message} onChange={(e) => setNotificationDraft({ ...notificationDraft, message: e.target.value })} placeholder="Message text" />
+              <textarea value={notificationDraft.message} onChange={(event) => setNotificationDraft({ ...notificationDraft, message: event.target.value })} placeholder="Message text" />
               <button className="button" type="submit">Send notification</button>
             </form>
           </SectionCard>
@@ -241,6 +299,7 @@ export default function TeacherDashboard() {
               rows={schedule}
               columns={[
                 { key: "course", label: "Course", render: (row) => row.course?.name || "—" },
+                { key: "group", label: "Group", render: (row) => row.group?.name || "—" },
                 { key: "room", label: "Room", render: (row) => row.room?.name || "—" },
                 { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date) },
                 { key: "time", label: "Time", render: (row) => formatScheduleSlot(row) },

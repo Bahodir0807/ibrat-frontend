@@ -1,14 +1,14 @@
 export function formatDate(value) {
-  if (!value) return "—";
+  if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return String(value);
   return date.toLocaleString();
 }
 
 export function formatPerson(user) {
-  if (!user) return "—";
+  if (!user) return "-";
   const fullName = [user.firstName, user.lastName].filter(Boolean).join(" ").trim();
-  return fullName || user.username || user.name || "—";
+  return fullName || user.username || user.name || "-";
 }
 
 export function normalizeList(value) {
@@ -43,7 +43,7 @@ const WEEKDAY_INDEX = {
 };
 
 export function formatWeekday(value) {
-  if (!value) return "—";
+  if (!value) return "-";
 
   const directMatch = WEEKDAY_OPTIONS.find((item) => item.value === value);
   if (directMatch) {
@@ -56,7 +56,7 @@ export function formatWeekday(value) {
 }
 
 export function formatTime(value) {
-  if (!value) return "—";
+  if (!value) return "-";
 
   if (/^\d{2}:\d{2}$/.test(value)) {
     return value;
@@ -68,13 +68,13 @@ export function formatTime(value) {
 }
 
 export function formatScheduleSlot(item) {
-  if (!item) return "—";
+  if (!item) return "-";
 
   const start = formatTime(item.timeStart);
   const end = formatTime(item.timeEnd);
 
   if (!item.timeStart && !item.timeEnd) {
-    return "—";
+    return "-";
   }
 
   return `${start} - ${end}`;

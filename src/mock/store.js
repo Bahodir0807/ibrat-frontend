@@ -274,6 +274,25 @@ export async function mockUsersUpdateRole(id, role) {
   return delay(sanitizeUser(user));
 }
 
+export async function mockUsersUpdate(id, payload) {
+  const db = readDb();
+  const user = db.users.find((item) => item.id === id || item._id === id);
+  if (!user) fail("User not found", 404);
+  Object.assign(user, payload);
+  if (payload.password === "") {
+    delete user.password;
+  }
+  writeDb(db);
+  return delay(sanitizeUser(user));
+}
+
+export async function mockUsersRemove(id) {
+  const db = readDb();
+  db.users = db.users.filter((item) => item.id !== id && item._id !== id);
+  writeDb(db);
+  return delay({ message: "User deleted successfully" });
+}
+
 export async function mockCoursesList() {
   const db = readDb();
   return delay(db.courses);
@@ -294,6 +313,26 @@ export async function mockCoursesCreate(payload) {
   return delay(course);
 }
 
+export async function mockCoursesUpdate(id, payload) {
+  const db = readDb();
+  const course = db.courses.find((item) => item._id === id);
+  if (!course) fail("Course not found", 404);
+  const teacher = payload.teacherId ? db.users.find((item) => item.id === payload.teacherId || item._id === payload.teacherId) : null;
+  Object.assign(course, payload);
+  if ("teacherId" in payload) {
+    course.teacherId = teacher ? sanitizeUser(teacher) : null;
+  }
+  writeDb(db);
+  return delay(course);
+}
+
+export async function mockCoursesRemove(id) {
+  const db = readDb();
+  db.courses = db.courses.filter((item) => item._id !== id);
+  writeDb(db);
+  return delay({ deleted: true });
+}
+
 export async function mockRoomsList() {
   return delay(readDb().rooms);
 }
@@ -307,6 +346,22 @@ export async function mockRoomsCreate(payload) {
   db.rooms.push(room);
   writeDb(db);
   return delay(room);
+}
+
+export async function mockRoomsUpdate(id, payload) {
+  const db = readDb();
+  const room = db.rooms.find((item) => item._id === id);
+  if (!room) fail("Room not found", 404);
+  Object.assign(room, payload);
+  writeDb(db);
+  return delay(room);
+}
+
+export async function mockRoomsRemove(id) {
+  const db = readDb();
+  db.rooms = db.rooms.filter((item) => item._id !== id);
+  writeDb(db);
+  return delay({ deleted: true });
 }
 
 export async function mockGroupsList() {
@@ -333,6 +388,31 @@ export async function mockGroupsCreate(payload) {
   db.groups.push(group);
   writeDb(db);
   return delay(group);
+}
+
+export async function mockGroupsUpdate(id, payload) {
+  const db = readDb();
+  const group = (db.groups || []).find((item) => item._id === id);
+  if (!group) fail("Group not found", 404);
+  const course = payload.course ? db.courses.find((item) => item._id === payload.course) : null;
+  const teacher = payload.teacher ? db.users.find((item) => item.id === payload.teacher || item._id === payload.teacher) : null;
+  const students = Array.isArray(payload.students)
+    ? db.users.filter((item) => payload.students.includes(item.id) || payload.students.includes(item._id)).map(sanitizeUser)
+    : null;
+
+  if ("name" in payload) group.name = payload.name;
+  if ("course" in payload) group.course = course || null;
+  if ("teacher" in payload) group.teacher = teacher ? sanitizeUser(teacher) : null;
+  if (students) group.students = students;
+  writeDb(db);
+  return delay(group);
+}
+
+export async function mockGroupsRemove(id) {
+  const db = readDb();
+  db.groups = (db.groups || []).filter((item) => item._id !== id);
+  writeDb(db);
+  return delay({ deleted: true });
 }
 
 export async function mockScheduleList() {
@@ -378,6 +458,33 @@ export async function mockScheduleCreate(payload) {
   return delay(item);
 }
 
+export async function mockScheduleUpdate(id, payload) {
+  const db = readDb();
+  const item = db.schedule.find((entry) => entry._id === id);
+  if (!item) fail("Schedule item not found", 404);
+  const course = payload.course ? db.courses.find((entry) => entry._id === payload.course) : null;
+  const room = payload.room ? db.rooms.find((entry) => entry._id === payload.room) : null;
+  const teacher = payload.teacher ? db.users.find((entry) => entry.id === payload.teacher || entry._id === payload.teacher) : null;
+  const group = payload.group ? (db.groups || []).find((entry) => entry._id === payload.group) : null;
+
+  if ("course" in payload) item.course = course || null;
+  if ("room" in payload) item.room = room || null;
+  if ("teacher" in payload) item.teacher = teacher ? sanitizeUser(teacher) : null;
+  if ("group" in payload) item.group = group || null;
+  if ("date" in payload) item.date = payload.date;
+  if ("timeStart" in payload) item.timeStart = payload.timeStart;
+  if ("timeEnd" in payload) item.timeEnd = payload.timeEnd;
+  writeDb(db);
+  return delay(item);
+}
+
+export async function mockScheduleRemove(id) {
+  const db = readDb();
+  db.schedule = db.schedule.filter((item) => item._id !== id);
+  writeDb(db);
+  return delay({ deleted: true });
+}
+
 export async function mockHomeworkMine(token) {
   const { db, user } = getCurrentUserOrFail(token);
   return delay(db.homework.filter((item) => item.userId === user.id));
@@ -417,6 +524,15 @@ export async function mockGradesCreate(payload) {
     date: new Date().toISOString(),
   };
   db.grades.push(item);
+  writeDb(db);
+  return delay(item);
+}
+
+export async function mockGradesUpdate(id, payload) {
+  const db = readDb();
+  const item = db.grades.find((entry) => entry._id === id);
+  if (!item) fail("Grade not found", 404);
+  if ("score" in payload) item.score = payload.score;
   writeDb(db);
   return delay(item);
 }
@@ -480,4 +596,11 @@ export async function mockPaymentsConfirm(id) {
   item.isConfirmed = true;
   writeDb(db);
   return delay(item);
+}
+
+export async function mockPaymentsRemove(id) {
+  const db = readDb();
+  db.payments = db.payments.filter((item) => item._id !== id);
+  writeDb(db);
+  return delay({ deleted: true });
 }

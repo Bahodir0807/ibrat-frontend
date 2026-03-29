@@ -81,12 +81,14 @@ export function AppShell({ title, subtitle, actions, children }) {
 }
 
 export function SectionCard({ title, subtitle, children, action }) {
+  const { tx } = useI18n();
+
   return (
     <section className="section-card">
       <div className="section-card__header">
         <div>
-          <h3>{title}</h3>
-          {subtitle ? <p>{subtitle}</p> : null}
+          <h3>{tx(title)}</h3>
+          {subtitle ? <p>{tx(subtitle)}</p> : null}
         </div>
         {action}
       </div>
@@ -96,13 +98,15 @@ export function SectionCard({ title, subtitle, children, action }) {
 }
 
 export function StatStrip({ items }) {
+  const { tx } = useI18n();
+
   return (
     <div className="stat-strip">
       {items.map((item) => (
         <article className="stat-card" key={item.label}>
-          <span>{item.label}</span>
+          <span>{tx(item.label)}</span>
           <strong>{item.value}</strong>
-          {item.note ? <small>{item.note}</small> : null}
+          {item.note ? <small>{tx(item.note)}</small> : null}
         </article>
       ))}
     </div>
@@ -135,7 +139,10 @@ export function DataTable({ columns, rows, emptyText = "No data yet" }) {
             <tr key={row.id || row._id || index}>
               {columns.map((column) => (
                 <td key={column.key}>
-                  {column.render ? column.render(row) : row[column.key]}
+                  {(() => {
+                    const value = column.render ? column.render(row) : row[column.key];
+                    return typeof value === "string" ? tx(value) : value;
+                  })()}
                 </td>
               ))}
             </tr>

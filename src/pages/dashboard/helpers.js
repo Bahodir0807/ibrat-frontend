@@ -15,6 +15,11 @@ export function normalizeList(value) {
   return Array.isArray(value) ? value : [];
 }
 
+export function matchesText(value, query) {
+  if (!query) return true;
+  return String(value || "").toLowerCase().includes(String(query).trim().toLowerCase());
+}
+
 export function splitTasks(text) {
   return text
     .split("\n")

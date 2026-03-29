@@ -5,7 +5,7 @@ export default function RequireRole({ roles, children }) {
   const { status, isAuthenticated, role } = useAuth();
 
   if (status === "loading") {
-    return <div className="center-screen">Loading access rules…</div>;
+    return <div className="center-screen">Loading access rules...</div>;
   }
 
   if (!isAuthenticated) {

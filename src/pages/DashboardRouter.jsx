@@ -5,7 +5,7 @@ export default function DashboardRouter() {
   const { status, isAuthenticated, role } = useAuth();
 
   if (status === "loading") {
-    return <div className="center-screen">Checking session…</div>;
+    return <div className="center-screen">Checking session...</div>;
   }
 
   if (!isAuthenticated) {

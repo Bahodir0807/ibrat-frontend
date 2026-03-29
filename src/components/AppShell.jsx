@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -20,7 +21,7 @@ export function AppShell({ title, subtitle, actions, children }) {
           </div>
         </div>
 
-        <nav className="app-nav">
+        <nav className="app-nav" aria-label={t("nav.dashboard", "Dashboard")}>
           <Link to="/">{t("nav.dashboard", "Dashboard")}</Link>
           <Link to="/users">{t("nav.users", "Users")}</Link>
           <Link to="/login">{t("nav.login", "Login")}</Link>
@@ -54,7 +55,7 @@ export function AppShell({ title, subtitle, actions, children }) {
           <div className="app-profile__label">{t("profile.signedInAs", "Signed in as")}</div>
           <div className="app-profile__name">{user?.username || "Unknown user"}</div>
           <div className="app-profile__role">{roleTitle}</div>
-          <button className="button button--ghost" onClick={logout}>
+          <button className="button button--ghost" type="button" onClick={logout}>
             {t("common.logout", "Logout")}
           </button>
         </div>
@@ -117,38 +118,149 @@ export function EmptyState({ text }) {
   return <div className="empty-state">{text}</div>;
 }
 
-export function DataTable({ columns, rows, emptyText = "No data yet" }) {
+export function DataTable({
+  columns,
+  rows,
+  emptyText = "No data yet",
+  pageSize = 8,
+  defaultSortKey = "",
+  defaultSortDirection = "asc",
+}) {
   const { t, tx } = useI18n();
+  const [sortState, setSortState] = useState({
+    key: defaultSortKey,
+    direction: defaultSortDirection,
+  });
+  const [page, setPage] = useState(1);
+
+  const sortedRows = useMemo(() => {
+    if (!sortState.key) return rows || [];
+
+    const column = columns.find((item) => item.key === sortState.key);
+    if (!column) return rows || [];
+
+    const readValue = (row) => {
+      if (column.sortValue) return column.sortValue(row);
+      if (!column.render) return row[column.key];
+      return row[column.key];
+    };
+
+    return [...(rows || [])].sort((left, right) => {
+      const leftValue = readValue(left);
+      const rightValue = readValue(right);
+
+      if (leftValue == null && rightValue == null) return 0;
+      if (leftValue == null) return 1;
+      if (rightValue == null) return -1;
+
+      if (typeof leftValue === "number" && typeof rightValue === "number") {
+        return sortState.direction === "asc" ? leftValue - rightValue : rightValue - leftValue;
+      }
+
+      return sortState.direction === "asc"
+        ? String(leftValue).localeCompare(String(rightValue))
+        : String(rightValue).localeCompare(String(leftValue));
+    });
+  }, [columns, rows, sortState]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedRows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedRows = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedRows.slice(start, start + pageSize);
+  }, [currentPage, pageSize, sortedRows]);
 
   if (!rows?.length) {
     return <EmptyState text={tx(emptyText || t("common.noData", "No data yet"))} />;
   }
 
+  const toggleSort = (column) => {
+    const canSort = column.sortable !== false && (!column.render || column.sortValue);
+    if (!canSort) return;
+
+    setPage(1);
+    setSortState((current) => {
+      if (current.key !== column.key) {
+        return { key: column.key, direction: "asc" };
+      }
+
+      return {
+        key: column.key,
+        direction: current.direction === "asc" ? "desc" : "asc",
+      };
+    });
+  };
+
   return (
-    <div className="table-wrap">
-      <table className="data-table">
-        <thead>
-          <tr>
-            {columns.map((column) => (
-              <th key={column.key}>{tx(column.label)}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={row.id || row._id || index}>
-              {columns.map((column) => (
-                <td key={column.key}>
-                  {(() => {
-                    const value = column.render ? column.render(row) : row[column.key];
-                    return typeof value === "string" ? tx(value) : value;
-                  })()}
-                </td>
-              ))}
+    <div className="table-card">
+      <div className="table-wrap">
+        <table className="data-table">
+          <caption className="sr-only">{tx(emptyText || t("common.noData", "No data yet"))}</caption>
+          <thead>
+            <tr>
+              {columns.map((column) => {
+                const isSortable = column.sortable !== false && (!column.render || column.sortValue);
+
+                return (
+                  <th key={column.key}>
+                    <button
+                      type="button"
+                      className={`table-sort ${isSortable ? "" : "is-disabled"}`}
+                      onClick={() => toggleSort(column)}
+                      aria-label={`${tx(column.label)} ${sortState.key === column.key ? sortState.direction : ""}`.trim()}
+                    >
+                      <span>{tx(column.label)}</span>
+                      {sortState.key === column.key ? (
+                        <span>{sortState.direction === "asc" ? "ASC" : "DESC"}</span>
+                      ) : null}
+                    </button>
+                  </th>
+                );
+              })}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {pagedRows.map((row, index) => (
+              <tr key={row.id || row._id || index}>
+                {columns.map((column) => (
+                  <td key={column.key}>
+                    {(() => {
+                      const value = column.render ? column.render(row) : row[column.key];
+                      return typeof value === "string" ? tx(value) : value;
+                    })()}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {sortedRows.length > pageSize ? (
+        <div className="table-pagination">
+          <span className="muted">
+            {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, sortedRows.length)} / ${sortedRows.length}`}
+          </span>
+          <div className="table-pagination__actions">
+            <button
+              className="button button--ghost"
+              type="button"
+              disabled={currentPage === 1}
+              onClick={() => setPage((value) => Math.max(1, value - 1))}
+            >
+              Prev
+            </button>
+            <span className="muted">{`${currentPage} / ${totalPages}`}</span>
+            <button
+              className="button button--ghost"
+              type="button"
+              disabled={currentPage === totalPages}
+              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

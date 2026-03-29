@@ -1,33 +1,41 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
+import { createZodResolver } from "../../lib/forms";
+import { showErrorToast, showSuccessToast } from "../../lib/toast";
+
+const registerSchema = z.object({
+  username: z.string().trim().min(3, "Username must be at least 3 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  role: z.enum(["guest", "student"]),
+});
 
 export default function Register() {
   const navigate = useNavigate();
-  const { register } = useAuth();
+  const { register: registerRequest } = useAuth();
   const { t } = useI18n();
-  const [form, setForm] = useState({
-    username: "",
-    password: "",
-    role: "guest",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    resolver: createZodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      role: "guest",
+    },
   });
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
 
-  async function handleSubmit(event) {
-    event.preventDefault();
-    setLoading(true);
-    setMessage("");
-
+  async function onSubmit(values) {
     try {
-      await register(form);
-      setMessage(t("auth.registrationSuccess", "Registration completed. You can sign in now."));
-      setTimeout(() => navigate("/login"), 700);
+      await registerRequest(values);
+      showSuccessToast(t("auth.registrationSuccess", "Registration completed. You can sign in now."));
+      setTimeout(() => navigate("/login"), 500);
     } catch (submitError) {
-      setMessage(submitError?.response?.data?.message || submitError?.message || "Registration failed");
-    } finally {
-      setLoading(false);
+      showErrorToast(submitError, t("auth.registrationFailed", "Registration failed"));
     }
   }
 
@@ -40,40 +48,29 @@ export default function Register() {
           <p>{t("auth.registerSubtitle", "Public registration is limited to guest and student.")}</p>
         </div>
 
-        <form className="auth-form" onSubmit={handleSubmit}>
+        <form className="auth-form" onSubmit={handleSubmit(onSubmit)}>
           <label>
             {t("auth.username", "Username")}
-            <input
-              value={form.username}
-              onChange={(event) => setForm({ ...form, username: event.target.value })}
-              placeholder={t("auth.username", "Username")}
-              autoComplete="username"
-            />
+            <input {...register("username")} placeholder={t("auth.username", "Username")} autoComplete="username" />
+            {errors.username ? <span className="field-error">{errors.username.message}</span> : null}
           </label>
           <label>
             {t("auth.password", "Password")}
-            <input
-              type="password"
-              value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
-              placeholder={t("auth.password", "Password")}
-              autoComplete="new-password"
-            />
+            <input type="password" {...register("password")} placeholder={t("auth.password", "Password")} autoComplete="new-password" />
+            {errors.password ? <span className="field-error">{errors.password.message}</span> : null}
           </label>
           <label>
             {t("auth.role", "Role")}
-            <select value={form.role} onChange={(event) => setForm({ ...form, role: event.target.value })}>
+            <select {...register("role")}>
               <option value="guest">{t("roles.guest", "Guest")}</option>
               <option value="student">{t("roles.student", "Student")}</option>
             </select>
           </label>
-          {message ? <div className="banner">{message}</div> : null}
-          <button className="button" type="submit" disabled={loading}>
-            {loading ? t("auth.creating", "Creating...") : t("auth.createAccount", "Create account")}
+          <button className="button" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? t("auth.creating", "Creating...") : t("auth.createAccount", "Create account")}
           </button>
           <p className="muted">
-            {t("auth.alreadyRegistered", "Already registered?")}{" "}
-            <Link to="/login">{t("auth.backToLogin", "Back to login")}</Link>
+            {t("auth.alreadyRegistered", "Already registered?")} <Link to="/login">{t("auth.backToLogin", "Back to login")}</Link>
           </p>
         </form>
       </div>

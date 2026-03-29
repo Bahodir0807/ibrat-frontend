@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { AppShell, DataTable, SectionCard } from "../../components/AppShell";
 import { usersApi } from "../../api/resources";
 import { formatPerson, normalizeList } from "./helpers";
+import { showErrorToast, showSuccessToast } from "../../lib/toast";
 
 const roleOptions = ["guest", "student", "teacher", "admin", "owner", "panda"];
 
@@ -33,25 +34,27 @@ export default function UsersManagementPage() {
     try {
       await usersApi.create(draft);
       setDraft({ username: "", password: "", role: "guest" });
+      showSuccessToast("User created");
       load();
     } catch (submitError) {
-      alert(submitError?.response?.data?.message || submitError?.message || "Failed to create user");
+      showErrorToast(submitError, "Failed to create user");
     }
   }
 
   async function updateRole(id, role) {
     try {
       await usersApi.updateRole(id, role);
+      showSuccessToast("Role updated");
       load();
     } catch (submitError) {
-      alert(submitError?.response?.data?.message || submitError?.message || "Failed to update role");
+      showErrorToast(submitError, "Failed to update role");
     }
   }
 
   return (
     <AppShell title="Users" subtitle="User management without password exposure" actions={<button className="button" onClick={load}>Refresh</button>}>
       {error ? <div className="banner banner--error">{error}</div> : null}
-      {loading ? <div className="empty-state">Loading users…</div> : null}
+      {loading ? <div className="empty-state">Loading users...</div> : null}
       <div className="dashboard-grid dashboard-grid--single">
         <SectionCard title="Create user" subtitle="Admin, owner and panda only">
           <form className="form-grid" onSubmit={createUser}>
@@ -75,7 +78,7 @@ export default function UsersManagementPage() {
                 key: "changeRole",
                 label: "Change role",
                 render: (row) => (
-                  <select defaultValue={row.role} onChange={(e) => updateRole(row._id, e.target.value)}>
+                  <select value={row.role} onChange={(e) => updateRole(row._id, e.target.value)}>
                     {roleOptions.map((item) => <option key={item} value={item}>{item}</option>)}
                   </select>
                 ),

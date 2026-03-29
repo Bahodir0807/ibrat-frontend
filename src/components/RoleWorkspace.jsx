@@ -25,6 +25,7 @@ export default function RoleWorkspace({ sections, initialSection, renderHeaderAs
               type="button"
               className={`role-workspace__nav-item ${section.key === current.key ? "is-active" : ""}`}
               onClick={() => setActive(section.key)}
+              aria-pressed={section.key === current.key}
             >
               <span>{tx(section.label)}</span>
               {section.note ? <small>{tx(section.note)}</small> : null}
@@ -34,6 +35,19 @@ export default function RoleWorkspace({ sections, initialSection, renderHeaderAs
       </aside>
 
       <div className="role-workspace__content">
+        <div className="role-workspace__mobile-nav" aria-label={t("workspace.sections", "Sections")}>
+          {normalizedSections.map((section) => (
+            <button
+              key={section.key}
+              type="button"
+              className={`role-workspace__chip ${section.key === current.key ? "is-active" : ""}`}
+              onClick={() => setActive(section.key)}
+              aria-pressed={section.key === current.key}
+            >
+              {tx(section.label)}
+            </button>
+          ))}
+        </div>
         <div className="role-workspace__content-head">
           <div>
             <p className="eyebrow">{t("workspace.department", "Department")}</p>

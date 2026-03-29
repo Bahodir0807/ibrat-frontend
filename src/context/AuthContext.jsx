@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fetchMe, loginRequest, registerRequest } from "../api/auth";
 
 const STORAGE_KEYS = {
@@ -19,6 +20,7 @@ function readStoredUser() {
 }
 
 export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState("loading");
   const [token, setToken] = useState(() => localStorage.getItem(STORAGE_KEYS.token) || "");
   const [role, setRole] = useState(() => localStorage.getItem(STORAGE_KEYS.role) || "");
@@ -42,6 +44,39 @@ export function AuthProvider({ children }) {
     setUser(null);
   };
 
+  const meQuery = useQuery({
+    queryKey: ["auth", "me", token],
+    queryFn: fetchMe,
+    enabled: Boolean(token),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  useEffect(() => {
+    if (!token) {
+      setStatus("ready");
+      return;
+    }
+
+    if (meQuery.isPending) {
+      setStatus("loading");
+      return;
+    }
+
+    if (meQuery.data) {
+      const profile = meQuery.data;
+      const nextRole = String(profile?.role || role || "").toLowerCase();
+      persistSession(token, nextRole, profile);
+      setStatus("ready");
+      return;
+    }
+
+    if (meQuery.isError) {
+      clearSession();
+      setStatus("ready");
+    }
+  }, [meQuery.data, meQuery.isError, meQuery.isPending, role, token]);
+
   const refreshProfile = async () => {
     if (!localStorage.getItem(STORAGE_KEYS.token)) {
       clearSession();
@@ -50,10 +85,12 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const profile = await fetchMe();
-      const nextRole = String(
-        profile?.role || localStorage.getItem(STORAGE_KEYS.role) || "",
-      ).toLowerCase();
+      const profile = await queryClient.fetchQuery({
+        queryKey: ["auth", "me", localStorage.getItem(STORAGE_KEYS.token) || ""],
+        queryFn: fetchMe,
+        staleTime: 0,
+      });
+      const nextRole = String(profile?.role || localStorage.getItem(STORAGE_KEYS.role) || "").toLowerCase();
       persistSession(localStorage.getItem(STORAGE_KEYS.token) || "", nextRole, profile);
       setStatus("ready");
       return profile;
@@ -63,15 +100,6 @@ export function AuthProvider({ children }) {
       return null;
     }
   };
-
-  useEffect(() => {
-    if (!token) {
-      setStatus("ready");
-      return;
-    }
-
-    refreshProfile();
-  }, []);
 
   const login = async (credentials) => {
     const response = await loginRequest(credentials);
@@ -88,6 +116,8 @@ export function AuthProvider({ children }) {
 
     if (!nextUser) {
       await refreshProfile();
+    } else {
+      queryClient.setQueryData(["auth", "me", nextToken], nextUser);
     }
 
     return response;
@@ -96,27 +126,29 @@ export function AuthProvider({ children }) {
   const register = async (payload) => registerRequest(payload);
 
   const logout = () => {
+    queryClient.removeQueries({ queryKey: ["auth", "me"] });
     clearSession();
     setStatus("ready");
   };
 
+  const value = useMemo(
+    () => ({
+      status,
+      token,
+      role,
+      user,
+      isAuthenticated: Boolean(token),
+      isMockSession: token.startsWith("mock-token:"),
+      login,
+      register,
+      logout,
+      refreshProfile,
+    }),
+    [role, status, token, user],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        status,
-        token,
-        role,
-        user,
-        isAuthenticated: Boolean(token),
-        isMockSession: token.startsWith("mock-token:"),
-        login,
-        register,
-        logout,
-        refreshProfile,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 }
 

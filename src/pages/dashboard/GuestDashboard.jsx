@@ -1,12 +1,24 @@
 import { useMemo } from "react";
-import { AppShell, SectionCard, StatStrip } from "../../components/AppShell";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { AppShell, DataTable, SectionCard, StatStrip } from "../../components/AppShell";
 import RoleWorkspace from "../../components/RoleWorkspace";
+import { usersApi } from "../../api/resources";
 import { useAuth } from "../../context/AuthContext";
 import { useI18n } from "../../context/I18nContext";
 
 export default function GuestDashboard() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const queryClient = useQueryClient();
+
+  const profileQuery = useQuery({
+    queryKey: ["guest", "profile"],
+    queryFn: usersApi.me,
+    initialData: user || undefined,
+    staleTime: 60_000,
+  });
+
+  const profile = profileQuery.data || user || null;
 
   const sections = useMemo(
     () => [
@@ -18,9 +30,9 @@ export default function GuestDashboard() {
         render: () => (
           <StatStrip
             items={[
-              { label: "Username", value: user?.username || "Guest" },
-              { label: "Role", value: user?.role || "guest" },
-              { label: "Status", value: user?.isActive ? "Active" : "Pending" },
+              { label: "Username", value: profile?.username || "Guest" },
+              { label: "Role", value: profile?.role || "guest" },
+              { label: "Status", value: profile?.isActive ? "Active" : "Pending" },
             ]}
           />
         ),
@@ -32,16 +44,19 @@ export default function GuestDashboard() {
         description: "Current authenticated guest profile.",
         render: () => (
           <SectionCard title="Profile" subtitle="Current account details">
-            <div className="data-table">
-              <table className="data-table">
-                <tbody>
-                  <tr><td>Username</td><td>{user?.username || "—"}</td></tr>
-                  <tr><td>Email</td><td>{user?.email || "—"}</td></tr>
-                  <tr><td>Phone</td><td>{user?.phoneNumber || "—"}</td></tr>
-                  <tr><td>Role</td><td>{user?.role || "guest"}</td></tr>
-                </tbody>
-              </table>
-            </div>
+            <DataTable
+              rows={[
+                { field: "Username", value: profile?.username || "-" },
+                { field: "Email", value: profile?.email || "-" },
+                { field: "Phone", value: profile?.phoneNumber || "-" },
+                { field: "Role", value: profile?.role || "guest" },
+              ]}
+              pageSize={10}
+              columns={[
+                { key: "field", label: "Field", sortValue: (row) => row.field || "" },
+                { key: "value", label: "Value", sortValue: (row) => row.value || "" },
+              ]}
+            />
           </SectionCard>
         ),
       },
@@ -60,11 +75,29 @@ export default function GuestDashboard() {
         ),
       },
     ],
-    [user],
+    [profile],
   );
 
   return (
-    <AppShell title={t("guest.title", "Guest Dashboard")} subtitle={t("guest.subtitle", "Minimal cabinet with clear next step")}>
+    <AppShell
+      title={t("guest.title", "Guest Dashboard")}
+      subtitle={t("guest.subtitle", "Minimal cabinet with clear next step")}
+      actions={(
+        <button
+          className="button"
+          type="button"
+          onClick={() => queryClient.invalidateQueries({ queryKey: ["guest"] })}
+        >
+          {t("common.refreshAll", "Refresh all")}
+        </button>
+      )}
+    >
+      {profileQuery.error ? (
+        <div className="banner banner--error">
+          {profileQuery.error?.response?.data?.message || profileQuery.error?.message || "Failed to load guest profile"}
+        </div>
+      ) : null}
+      {profileQuery.isLoading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
       <RoleWorkspace sections={sections} initialSection="overview" />
     </AppShell>
   );

@@ -9,17 +9,29 @@ export function AppShell({ title, subtitle, actions, children, sidebarSections =
   const { language, languages, setLanguage, t, tx } = useI18n();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const roleTitle = t(`roles.${role}`, role || "Guest");
-  const activeSectionTitle = sidebarSections.find((section) => section.key === activeSection)?.label;
+  const activeSectionConfig = sidebarSections.find((section) => section.key === activeSection);
+  const activeSectionTitle = activeSectionConfig?.label;
+  const activeSectionNote = activeSectionConfig?.note;
+  const userInitial = (user?.username || roleTitle || "I").slice(0, 1).toUpperCase();
 
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
         <div className="app-sidebar__scroll">
           <div className="app-brand">
-            <div className="app-brand__badge">IB</div>
-            <div>
-              <h1>Ibrat Panel</h1>
-              <p>{roleTitle}</p>
+            <div className="app-brand__badge">{userInitial}</div>
+            <div className="app-brand__meta">
+              <h1>Ibrat Center</h1>
+              <p>{t("workspace.learningHub", "Learning hub")}</p>
+            </div>
+          </div>
+
+          <div className="app-sidebar__summary">
+            <div className="app-sidebar__summary-avatar">{userInitial}</div>
+            <div className="app-sidebar__summary-copy">
+              <strong>{user?.username || "Unknown user"}</strong>
+              <span>{roleTitle}</span>
+              {activeSectionTitle ? <small>{tx(activeSectionTitle)}</small> : null}
             </div>
           </div>
 
@@ -30,18 +42,26 @@ export function AppShell({ title, subtitle, actions, children, sidebarSections =
                 <h3>{t("workspace.sections", "Sections")}</h3>
               </div>
               <div className="role-workspace__nav">
-                {sidebarSections.map((section) => (
-                  <button
-                    key={section.key}
-                    type="button"
-                    className={`role-workspace__nav-item ${section.key === activeSection ? "is-active" : ""}`}
-                    onClick={() => onSectionChange?.(section.key)}
-                    aria-pressed={section.key === activeSection}
-                  >
-                    <span>{tx(section.label)}</span>
-                    {section.note ? <small>{tx(section.note)}</small> : null}
-                  </button>
-                ))}
+                {sidebarSections.map((section) => {
+                  const isActive = section.key === activeSection;
+                  const helperText = section.note || section.description;
+
+                  return (
+                    <button
+                      key={section.key}
+                      type="button"
+                      className={`role-workspace__nav-item ${isActive ? "is-active" : ""}`}
+                      onClick={() => onSectionChange?.(section.key)}
+                      aria-pressed={isActive}
+                    >
+                      <span className="role-workspace__nav-indicator" aria-hidden="true" />
+                      <div className="role-workspace__nav-copy">
+                        <strong>{tx(section.label)}</strong>
+                        {helperText ? <small>{tx(helperText)}</small> : null}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ) : null}
@@ -98,19 +118,26 @@ export function AppShell({ title, subtitle, actions, children, sidebarSections =
 
       <main className="app-main">
         <header className="app-header">
-          <div>
+          <div className="app-header__copy">
             <p className="eyebrow">{roleTitle}</p>
             <h2>{tx(title)}</h2>
             {subtitle ? <p className="muted">{tx(subtitle)}</p> : null}
           </div>
-          <div className="app-header__actions">{actions}</div>
+          <div className="app-header__status">
+            <div className="app-header__status-card">
+              <span>{t("workspace.currentDepartment", "Current department")}</span>
+              <strong>{activeSectionTitle ? tx(activeSectionTitle) : tx(title)}</strong>
+              {activeSectionNote ? <small>{tx(activeSectionNote)}</small> : null}
+            </div>
+            <div className="app-header__actions">{actions}</div>
+          </div>
         </header>
         {isMockSession ? (
           <div className="banner">
             {t("banner.mock", "Mock mode is active. The frontend is running without backend and stores data in localStorage.")}
           </div>
         ) : null}
-        {children}
+        <div className="app-main__body">{children}</div>
       </main>
     </div>
   );

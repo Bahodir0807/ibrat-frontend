@@ -54,6 +54,7 @@ export default function ManagementDashboard({ title, subtitle, variant = "admin"
   const tr = (value) => t(value, value);
   const queryClient = useQueryClient();
   const features = featurePresets[variant] || featurePresets.admin;
+  const [activeSection, setActiveSection] = useState("overview");
 
   const [editingUserId, setEditingUserId] = useState("");
   const [editingCourseId, setEditingCourseId] = useState("");
@@ -884,15 +885,20 @@ export default function ManagementDashboard({ title, subtitle, variant = "admin"
     });
   }
 
+  const currentSection = sections.find((section) => section.key === activeSection) || sections[0];
+
   return (
     <AppShell
       title={title || t("management.title", "Management Dashboard")}
       subtitle={subtitle || t("management.subtitle", "Admin, owner and panda workspace")}
+      sidebarSections={sections}
+      activeSection={currentSection?.key}
+      onSectionChange={setActiveSection}
       actions={<button className="button" onClick={refresh}>{t("common.refreshAll", "Refresh all")}</button>}
     >
       {error ? <div className="banner banner--error">{error?.response?.data?.message || error?.message || tr("Failed to load dashboard")}</div> : null}
       {loading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
-      <RoleWorkspace sections={sections} initialSection="overview" />
+      <RoleWorkspace section={currentSection} />
       <FormModal
         open={modalState.users}
         title={editingUserId ? tr("Update user") : tr("Create user")}

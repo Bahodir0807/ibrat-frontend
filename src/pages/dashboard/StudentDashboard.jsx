@@ -10,11 +10,10 @@ import { useI18n } from "../../context/I18nContext";
 export default function StudentDashboard() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const [activeSection, setActiveSection] = useState("overview");
   const [filters, setFilters] = useState({
     schedule: "",
-    homework: "",
-    grades: "",
-    attendance: "all",
+    group: "",
     payments: "all",
   });
 
@@ -44,13 +43,7 @@ export default function StudentDashboard() {
   const grades = gradesQuery.data || [];
   const attendance = attendanceQuery.data || [];
   const payments = paymentsQuery.data || [];
-  const loading = [
-    scheduleQuery.isLoading,
-    homeworkQuery.isLoading,
-    gradesQuery.isLoading,
-    attendanceQuery.isLoading,
-    paymentsQuery.isLoading,
-  ].some(Boolean);
+  const loading = [scheduleQuery.isLoading, homeworkQuery.isLoading, gradesQuery.isLoading, attendanceQuery.isLoading, paymentsQuery.isLoading].some(Boolean);
   const error =
     scheduleQuery.error?.response?.data?.message ||
     scheduleQuery.error?.message ||
@@ -75,31 +68,32 @@ export default function StudentDashboard() {
     [filters.schedule, schedule],
   );
 
-  const filteredHomework = useMemo(
+  const filteredGroupHomework = useMemo(
     () =>
       homework.filter((row) => (
-        matchesText(Array.isArray(row.tasks) ? row.tasks.join(", ") : "", filters.homework) ||
-        matchesText(formatDate(row.date), filters.homework)
+        matchesText(Array.isArray(row.tasks) ? row.tasks.join(", ") : "", filters.group) ||
+        matchesText(formatDate(row.date), filters.group)
       )),
-    [filters.homework, homework],
+    [filters.group, homework],
   );
 
-  const filteredGrades = useMemo(
+  const filteredGroupGrades = useMemo(
     () =>
       grades.filter((row) => (
-        matchesText(row.subject, filters.grades) ||
-        matchesText(row.score, filters.grades) ||
-        matchesText(formatDate(row.date), filters.grades)
+        matchesText(row.subject, filters.group) ||
+        matchesText(row.score, filters.group) ||
+        matchesText(formatDate(row.date), filters.group)
       )),
-    [filters.grades, grades],
+    [filters.group, grades],
   );
 
-  const filteredAttendance = useMemo(
+  const filteredGroupAttendance = useMemo(
     () =>
       attendance.filter((row) => (
-        filters.attendance === "all" ? true : row.status === filters.attendance
+        matchesText(row.status, filters.group) ||
+        matchesText(formatDate(row.date), filters.group)
       )),
-    [attendance, filters.attendance],
+    [attendance, filters.group],
   );
 
   const filteredPayments = useMemo(
@@ -118,16 +112,74 @@ export default function StudentDashboard() {
       note: "My progress",
       description: "Snapshot of the student personal cabinet.",
       render: () => (
+        <StatStrip
+          items={[
+            { label: "Schedule", value: schedule.length },
+            { label: "Homework", value: homework.length },
+            { label: "Grades", value: grades.length },
+            { label: "Attendance", value: attendance.length },
+            { label: "Payments", value: payments.length },
+          ]}
+        />
+      ),
+    },
+    {
+      key: "groups",
+      label: "Groups",
+      note: "Homework, grades, attendance",
+      description: "Everything related to your group and progress in one department.",
+      render: () => (
         <div className="stack">
-          <StatStrip
-            items={[
-              { label: "Schedule", value: schedule.length },
-              { label: "Homework", value: homework.length },
-              { label: "Grades", value: grades.length },
-              { label: "Attendance", value: attendance.length },
-              { label: "Payments", value: payments.length },
-            ]}
-          />
+          <SectionCard title="Group progress" subtitle="Homework, grades and attendance in one filtered view">
+            <ListToolbar
+              value={filters.group}
+              onChange={(value) => setFilters((current) => ({ ...current, group: value }))}
+              placeholder="Search group progress by task, grade, status or date"
+              summary={`${filteredGroupHomework.length + filteredGroupGrades.length + filteredGroupAttendance.length} records`}
+            />
+          </SectionCard>
+          <div className="dashboard-grid dashboard-grid--dense">
+            <SectionCard title="Homework" subtitle="From /homework/me">
+              <DataTable
+                rows={filteredGroupHomework}
+                caption="Homework"
+                pageSize={4}
+                defaultSortKey="date"
+                defaultSortDirection="desc"
+                columns={[
+                  { key: "date", label: "Date", render: (row) => formatDate(row.date), sortValue: (row) => row.date || "" },
+                  { key: "tasks", label: "Tasks", render: (row) => (Array.isArray(row.tasks) ? row.tasks.join(", ") : "-"), sortValue: (row) => (Array.isArray(row.tasks) ? row.tasks.join(", ") : "") },
+                ]}
+              />
+            </SectionCard>
+            <SectionCard title="Grades" subtitle="From /grades/me">
+              <DataTable
+                rows={filteredGroupGrades}
+                caption="Grades"
+                pageSize={4}
+                defaultSortKey="date"
+                defaultSortDirection="desc"
+                columns={[
+                  { key: "subject", label: "Subject", sortValue: (row) => row.subject || "" },
+                  { key: "score", label: "Score", sortValue: (row) => Number(row.score || 0) },
+                  { key: "date", label: "Date", render: (row) => formatDate(row.date), sortValue: (row) => row.date || "" },
+                ]}
+              />
+            </SectionCard>
+            <SectionCard title="Attendance" subtitle="From /attendance/me">
+              <DataTable
+                rows={filteredGroupAttendance}
+                caption="Attendance"
+                pageSize={6}
+                defaultSortKey="date"
+                defaultSortDirection="desc"
+                columns={[
+                  { key: "date", label: "Date", render: (row) => formatDate(row.date), sortValue: (row) => row.date || "" },
+                  { key: "status", label: "Status", sortValue: (row) => row.status || "" },
+                ]}
+              />
+            </SectionCard>
+          </div>
         </div>
       ),
     },
@@ -146,6 +198,7 @@ export default function StudentDashboard() {
           />
           <DataTable
             rows={filteredSchedule}
+            caption="My schedule"
             pageSize={6}
             defaultSortKey="weekday"
             columns={[
@@ -154,95 +207,6 @@ export default function StudentDashboard() {
               { key: "room", label: "Room", render: (row) => row.room?.name || "-", sortValue: (row) => row.room?.name || "" },
               { key: "weekday", label: "Day", render: (row) => formatWeekday(row.weekday || row.date), sortValue: (row) => formatWeekday(row.weekday || row.date) },
               { key: "time", label: "Time", render: (row) => formatScheduleSlot(row), sortValue: (row) => formatScheduleSlot(row) },
-            ]}
-          />
-        </SectionCard>
-      ),
-    },
-    {
-      key: "homework",
-      label: "Homework",
-      note: "Tasks",
-      description: "All current homework assignments.",
-      render: () => (
-        <SectionCard title="Homework" subtitle="From /homework/me">
-          <ListToolbar
-            value={filters.homework}
-            onChange={(value) => setFilters((current) => ({ ...current, homework: value }))}
-            placeholder="Search homework by task or date"
-            summary={`${filteredHomework.length} records`}
-          />
-          <DataTable
-            rows={filteredHomework}
-            pageSize={6}
-            defaultSortKey="date"
-            defaultSortDirection="desc"
-            columns={[
-              { key: "date", label: "Date", render: (row) => formatDate(row.date), sortValue: (row) => row.date || "" },
-              { key: "tasks", label: "Tasks", render: (row) => (Array.isArray(row.tasks) ? row.tasks.join(", ") : "-"), sortValue: (row) => (Array.isArray(row.tasks) ? row.tasks.join(", ") : "") },
-              { key: "completed", label: "Done", render: (row) => (row.completed ? "Yes" : "No"), sortValue: (row) => (row.completed ? 1 : 0) },
-            ]}
-          />
-        </SectionCard>
-      ),
-    },
-    {
-      key: "grades",
-      label: "Grades",
-      note: "Scores",
-      description: "Received grades by subject.",
-      render: () => (
-        <SectionCard title="Grades" subtitle="From /grades/me">
-          <ListToolbar
-            value={filters.grades}
-            onChange={(value) => setFilters((current) => ({ ...current, grades: value }))}
-            placeholder="Search grades by subject, score or date"
-            summary={`${filteredGrades.length} records`}
-          />
-          <DataTable
-            rows={filteredGrades}
-            pageSize={6}
-            defaultSortKey="date"
-            defaultSortDirection="desc"
-            columns={[
-              { key: "subject", label: "Subject", sortValue: (row) => row.subject || "" },
-              { key: "score", label: "Score", sortValue: (row) => Number(row.score || 0) },
-              { key: "date", label: "Date", render: (row) => formatDate(row.date), sortValue: (row) => row.date || "" },
-            ]}
-          />
-        </SectionCard>
-      ),
-    },
-    {
-      key: "attendance",
-      label: "Attendance",
-      note: "Presence",
-      description: "Your attendance history.",
-      render: () => (
-        <SectionCard title="Attendance" subtitle="From /attendance/me">
-          <ListToolbar
-            showSearch={false}
-            value=""
-            onChange={() => {}}
-            summary={`${filteredAttendance.length} records`}
-            action={(
-              <select value={filters.attendance} onChange={(event) => setFilters((current) => ({ ...current, attendance: event.target.value }))}>
-                <option value="all">All statuses</option>
-                <option value="present">Present</option>
-                <option value="absent">Absent</option>
-                <option value="late">Late</option>
-                <option value="excused">Excused</option>
-              </select>
-            )}
-          />
-          <DataTable
-            rows={filteredAttendance}
-            pageSize={6}
-            defaultSortKey="date"
-            defaultSortDirection="desc"
-            columns={[
-              { key: "date", label: "Date", render: (row) => formatDate(row.date), sortValue: (row) => row.date || "" },
-              { key: "status", label: "Status", sortValue: (row) => row.status || "" },
             ]}
           />
         </SectionCard>
@@ -270,6 +234,7 @@ export default function StudentDashboard() {
           />
           <DataTable
             rows={filteredPayments}
+            caption="Payments"
             pageSize={6}
             defaultSortKey="paidAt"
             defaultSortDirection="desc"
@@ -284,23 +249,20 @@ export default function StudentDashboard() {
     },
   ];
 
+  const currentSection = sections.find((section) => section.key === activeSection) || sections[0];
+
   return (
     <AppShell
       title={t("student.title", "Student Dashboard")}
       subtitle={t("student.subtitle", "Personal cabinet with separate sections")}
-      actions={(
-        <button
-          className="button"
-          type="button"
-          onClick={() => queryClient.invalidateQueries({ queryKey: ["student"] })}
-        >
-          {t("common.refreshAll", "Refresh all")}
-        </button>
-      )}
+      sidebarSections={sections}
+      activeSection={currentSection?.key}
+      onSectionChange={setActiveSection}
+      actions={<button className="button" type="button" onClick={() => queryClient.invalidateQueries({ queryKey: ["student"] })}>{t("common.refreshAll", "Refresh all")}</button>}
     >
       {error ? <div className="banner banner--error">{error}</div> : null}
       {loading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
-      <RoleWorkspace sections={sections} initialSection="overview" />
+      <RoleWorkspace section={currentSection} />
     </AppShell>
   );
 }

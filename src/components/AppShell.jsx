@@ -1,63 +1,98 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { useI18n } from "../context/I18nContext";
 
-export function AppShell({ title, subtitle, actions, children }) {
+export function AppShell({ title, subtitle, actions, children, sidebarSections = [], activeSection, onSectionChange }) {
   const { role, user, logout, isMockSession } = useAuth();
   const { theme, themes, setTheme } = useTheme();
   const { language, languages, setLanguage, t, tx } = useI18n();
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const roleTitle = t(`roles.${role}`, role || "Guest");
+  const activeSectionTitle = sidebarSections.find((section) => section.key === activeSection)?.label;
 
   return (
     <div className="app-shell">
       <aside className="app-sidebar">
-        <div className="app-brand">
-          <div className="app-brand__badge">IB</div>
-          <div>
-            <h1>Ibrat Panel</h1>
-            <p>{t("brand.connected", "Connected to backend")}</p>
+        <div className="app-sidebar__scroll">
+          <div className="app-brand">
+            <div className="app-brand__badge">IB</div>
+            <div>
+              <h1>Ibrat Panel</h1>
+              <p>{roleTitle}</p>
+            </div>
           </div>
+
+          {sidebarSections.length ? (
+            <div className="app-sidebar-sections">
+              <div className="role-workspace__sidebar-head">
+                <p className="eyebrow">{t("workspace.departments", "Departments")}</p>
+                <h3>{t("workspace.sections", "Sections")}</h3>
+              </div>
+              <div className="role-workspace__nav">
+                {sidebarSections.map((section) => (
+                  <button
+                    key={section.key}
+                    type="button"
+                    className={`role-workspace__nav-item ${section.key === activeSection ? "is-active" : ""}`}
+                    onClick={() => onSectionChange?.(section.key)}
+                    aria-pressed={section.key === activeSection}
+                  >
+                    <span>{tx(section.label)}</span>
+                    {section.note ? <small>{tx(section.note)}</small> : null}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        <nav className="app-nav" aria-label={t("nav.dashboard", "Dashboard")}>
-          <Link to="/">{t("nav.dashboard", "Dashboard")}</Link>
-          <Link to="/users">{t("nav.users", "Users")}</Link>
-          <Link to="/login">{t("nav.login", "Login")}</Link>
-          <Link to="/register">{t("nav.register", "Register")}</Link>
-        </nav>
-
-        <div className="preference-card">
-          <label>
-            <span>{t("theme.label", "Theme")}</span>
-            <select value={theme} onChange={(event) => setTheme(event.target.value)}>
-              {themes.map((item) => (
-                <option key={item} value={item}>
-                  {t(`theme.${item}`, item)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span>{t("lang.label", "Language")}</span>
-            <select value={language} onChange={(event) => setLanguage(event.target.value)}>
-              {languages.map((item) => (
-                <option key={item} value={item}>
-                  {t(`lang.${item}`, item)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="app-profile">
-          <div className="app-profile__label">{t("profile.signedInAs", "Signed in as")}</div>
-          <div className="app-profile__name">{user?.username || "Unknown user"}</div>
-          <div className="app-profile__role">{roleTitle}</div>
-          <button className="button button--ghost" type="button" onClick={logout}>
-            {t("common.logout", "Logout")}
+        <div className="app-sidebar__footer">
+          <button
+            className="button button--ghost app-settings-toggle"
+            type="button"
+            aria-expanded={settingsOpen}
+            onClick={() => setSettingsOpen((value) => !value)}
+          >
+            {t("settings.title", "Settings")}
           </button>
+
+          {settingsOpen ? (
+            <div className="preference-card app-settings-panel">
+              <div className="app-profile">
+                <div className="app-profile__label">{t("profile.signedInAs", "Signed in as")}</div>
+                <div className="app-profile__name">{user?.username || "Unknown user"}</div>
+                <div className="app-profile__role">{roleTitle}</div>
+                {activeSectionTitle ? <div className="app-profile__section">{tx(activeSectionTitle)}</div> : null}
+              </div>
+
+              <label>
+                <span>{t("theme.label", "Theme")}</span>
+                <select value={theme} onChange={(event) => setTheme(event.target.value)}>
+                  {themes.map((item) => (
+                    <option key={item} value={item}>
+                      {t(`theme.${item}`, item)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label>
+                <span>{t("lang.label", "Language")}</span>
+                <select value={language} onChange={(event) => setLanguage(event.target.value)}>
+                  {languages.map((item) => (
+                    <option key={item} value={item}>
+                      {t(`lang.${item}`, item)}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button className="button button--ghost" type="button" onClick={logout}>
+                {t("common.logout", "Logout")}
+              </button>
+            </div>
+          ) : null}
         </div>
       </aside>
 
@@ -122,6 +157,7 @@ export function DataTable({
   columns,
   rows,
   emptyText = "No data yet",
+  caption,
   pageSize = 8,
   defaultSortKey = "",
   defaultSortDirection = "asc",
@@ -195,7 +231,7 @@ export function DataTable({
     <div className="table-card">
       <div className="table-wrap">
         <table className="data-table">
-          <caption className="sr-only">{tx(emptyText || t("common.noData", "No data yet"))}</caption>
+          <caption className="sr-only">{tx(caption || emptyText || t("common.noData", "No data yet"))}</caption>
           <thead>
             <tr>
               {columns.map((column) => {
@@ -207,11 +243,11 @@ export function DataTable({
                       type="button"
                       className={`table-sort ${isSortable ? "" : "is-disabled"}`}
                       onClick={() => toggleSort(column)}
-                      aria-label={`${tx(column.label)} ${sortState.key === column.key ? sortState.direction : ""}`.trim()}
+                      aria-label={`${tx(column.label)} ${sortState.key === column.key ? t(`common.sort.${sortState.direction}`, sortState.direction) : ""}`.trim()}
                     >
                       <span>{tx(column.label)}</span>
                       {sortState.key === column.key ? (
-                        <span>{sortState.direction === "asc" ? "ASC" : "DESC"}</span>
+                        <span>{sortState.direction === "asc" ? t("common.sort.ascShort", "Asc") : t("common.sort.descShort", "Desc")}</span>
                       ) : null}
                     </button>
                   </th>
@@ -247,7 +283,7 @@ export function DataTable({
               disabled={currentPage === 1}
               onClick={() => setPage((value) => Math.max(1, value - 1))}
             >
-              Prev
+              {t("common.previous", "Previous")}
             </button>
             <span className="muted">{`${currentPage} / ${totalPages}`}</span>
             <button
@@ -256,7 +292,7 @@ export function DataTable({
               disabled={currentPage === totalPages}
               onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
             >
-              Next
+              {t("common.next", "Next")}
             </button>
           </div>
         </div>

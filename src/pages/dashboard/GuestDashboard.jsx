@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppShell, DataTable, SectionCard, StatStrip } from "../../components/AppShell";
 import RoleWorkspace from "../../components/RoleWorkspace";
@@ -10,6 +10,7 @@ export default function GuestDashboard() {
   const { user } = useAuth();
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const [activeSection, setActiveSection] = useState("overview");
 
   const profileQuery = useQuery({
     queryKey: ["guest", "profile"],
@@ -51,6 +52,7 @@ export default function GuestDashboard() {
                 { field: "Phone", value: profile?.phoneNumber || "-" },
                 { field: "Role", value: profile?.role || "guest" },
               ]}
+              caption="Profile"
               pageSize={10}
               columns={[
                 { key: "field", label: "Field", sortValue: (row) => row.field || "" },
@@ -69,7 +71,7 @@ export default function GuestDashboard() {
           <SectionCard title="What to do next" subtitle="Recommended flow">
             <div className="stack">
               <div className="pill">Ask admin to upgrade your role to student or teacher.</div>
-              <div className="pill">After role upgrade, re-login to open the full dashboard.</div>
+              <div className="pill">After role upgrade, refresh the workspace to unlock the full dashboard.</div>
             </div>
           </SectionCard>
         ),
@@ -78,10 +80,15 @@ export default function GuestDashboard() {
     [profile],
   );
 
+  const currentSection = sections.find((section) => section.key === activeSection) || sections[0];
+
   return (
     <AppShell
       title={t("guest.title", "Guest Dashboard")}
       subtitle={t("guest.subtitle", "Minimal cabinet with clear next step")}
+      sidebarSections={sections}
+      activeSection={currentSection?.key}
+      onSectionChange={setActiveSection}
       actions={(
         <button
           className="button"
@@ -98,7 +105,7 @@ export default function GuestDashboard() {
         </div>
       ) : null}
       {profileQuery.isLoading ? <div className="empty-state">{t("common.loadingWorkspace", "Loading workspace...")}</div> : null}
-      <RoleWorkspace sections={sections} initialSection="overview" />
+      <RoleWorkspace section={currentSection} />
     </AppShell>
   );
 }

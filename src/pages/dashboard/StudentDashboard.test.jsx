@@ -77,10 +77,8 @@ describe("StudentDashboard", () => {
     fireEvent.click(screen.getAllByRole("button", { name: /schedule/i })[0]);
     expect(await screen.findByText("Math")).toBeInTheDocument();
 
-    fireEvent.click(screen.getAllByRole("button", { name: /homework/i })[0]);
+    fireEvent.click(screen.getAllByRole("button", { name: /groups/i })[0]);
     expect(await screen.findByText("Essay")).toBeInTheDocument();
-
-    fireEvent.click(screen.getAllByRole("button", { name: /attendance/i })[0]);
     expect(await screen.findByText("present")).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole("button", { name: /payments/i })[0]);

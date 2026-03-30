@@ -225,6 +225,12 @@ textarea {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 16px 30px rgba(234, 88, 12, 0.28);
+  transition: transform 160ms ease, box-shadow 160ms ease, opacity 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 36px rgba(234, 88, 12, 0.32);
 }
 
 .button:disabled {
@@ -237,6 +243,11 @@ textarea {
   color: var(--text);
   border: 1px solid var(--border);
   box-shadow: none;
+}
+
+.button--ghost:hover:not(:disabled) {
+  box-shadow: none;
+  background: color-mix(in srgb, var(--bg-soft) 75%, var(--accent) 25%);
 }
 
 .field-error {
@@ -270,21 +281,46 @@ textarea {
   min-height: 100vh;
   display: grid;
   grid-template-columns: 300px 1fr;
+  background: transparent;
 }
 
 .app-sidebar {
-  padding: 1.35rem;
+  padding: 1.2rem;
   border-right: 1px solid var(--border);
   background: var(--sidebar-bg);
   display: flex;
   flex-direction: column;
-  gap: 1.4rem;
+  gap: 1rem;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+}
+
+.app-sidebar__scroll {
+  display: grid;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 0.15rem;
+}
+
+.app-sidebar__footer {
+  display: grid;
+  gap: 0.8rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid color-mix(in srgb, var(--border) 75%, transparent);
+}
+
+.app-settings-toggle {
+  width: 100%;
 }
 
 .app-brand {
   display: flex;
   gap: 0.9rem;
   align-items: center;
+  padding: 0.2rem 0.1rem 0.55rem;
 }
 
 .app-brand__badge {
@@ -298,17 +334,13 @@ textarea {
   background: linear-gradient(135deg, var(--accent), var(--accent-cool));
 }
 
-.app-nav {
+.app-sidebar-sections {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.9rem;
 }
 
-.app-nav a {
-  text-decoration: none;
-  padding: 0.8rem 0.95rem;
-  border-radius: 14px;
-  color: var(--text);
-  background: var(--bg-soft);
+.app-sidebar-sections .role-workspace__sidebar-head {
+  padding: 0 0.1rem;
 }
 
 .preference-card {
@@ -318,6 +350,11 @@ textarea {
   border-radius: 18px;
   border: 1px solid var(--border);
   background: var(--bg-soft);
+  backdrop-filter: blur(16px);
+}
+
+.app-settings-panel {
+  margin-top: 0;
 }
 
 .preference-card label {
@@ -330,13 +367,8 @@ textarea {
 }
 
 .app-profile {
-  margin-top: auto;
   display: grid;
   gap: 0.45rem;
-  padding: 1rem;
-  border-radius: 18px;
-  border: 1px solid var(--border);
-  background: var(--bg-soft);
 }
 
 .app-profile__name {
@@ -347,8 +379,15 @@ textarea {
   color: #f7c58b;
 }
 
+.app-profile__section {
+  font-size: 0.82rem;
+  color: var(--muted);
+  padding-top: 0.1rem;
+}
+
 .app-main {
   padding: 1.35rem;
+  min-width: 0;
 }
 
 .app-header {
@@ -414,6 +453,7 @@ textarea {
 
 .table-wrap {
   overflow-x: auto;
+  border-radius: 18px;
 }
 
 .table-card {
@@ -424,6 +464,7 @@ textarea {
 .data-table {
   width: 100%;
   border-collapse: collapse;
+  min-width: 100%;
 }
 
 .table-sort {
@@ -436,6 +477,12 @@ textarea {
   font: inherit;
   padding: 0;
   cursor: pointer;
+  border-radius: 10px;
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.table-sort:hover:not(.is-disabled) {
+  color: color-mix(in srgb, var(--text) 82%, var(--accent) 18%);
 }
 
 .table-sort.is-disabled {
@@ -448,6 +495,15 @@ textarea {
   padding: 0.72rem 0.55rem;
   text-align: left;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: top;
+}
+
+.data-table tbody tr {
+  transition: background 160ms ease;
+}
+
+.data-table tbody tr:hover {
+  background: color-mix(in srgb, var(--bg-soft) 80%, transparent);
 }
 
 .table-pagination {
@@ -465,24 +521,14 @@ textarea {
 }
 
 .role-workspace {
-  display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 1rem;
+  min-width: 0;
 }
 
-.role-workspace__sidebar,
 .role-workspace__content {
   border: 1px solid var(--border);
   background: var(--bg-card);
   border-radius: 22px;
   box-shadow: var(--shadow);
-}
-
-.role-workspace__sidebar {
-  padding: 1rem;
-  height: fit-content;
-  position: sticky;
-  top: 1rem;
 }
 
 .role-workspace__sidebar-head h3,
@@ -507,6 +553,12 @@ textarea {
   cursor: pointer;
   display: grid;
   gap: 0.2rem;
+  transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
+}
+
+.role-workspace__nav-item:hover {
+  transform: translateX(2px);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border));
 }
 
 .role-workspace__nav-item small {
@@ -519,30 +571,8 @@ textarea {
 }
 
 .role-workspace__content {
-  padding: 1rem;
-}
-
-.role-workspace__mobile-nav {
-  display: none;
-  gap: 0.65rem;
-  overflow-x: auto;
-  margin-bottom: 1rem;
-  padding-bottom: 0.2rem;
-}
-
-.role-workspace__chip {
-  border: 1px solid var(--border);
-  background: var(--bg-soft);
-  color: var(--text);
-  border-radius: 999px;
-  padding: 0.7rem 0.95rem;
-  white-space: nowrap;
-  flex: 0 0 auto;
-}
-
-.role-workspace__chip.is-active {
-  border-color: rgba(249, 115, 22, 0.34);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.18), rgba(13, 148, 136, 0.1));
+  padding: 1.1rem;
+  min-width: 0;
 }
 
 .role-workspace__content-head {
@@ -550,6 +580,8 @@ textarea {
   justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding-bottom: 0.9rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
 }
 
 .stack {
@@ -561,10 +593,11 @@ textarea {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 0.3rem 0.7rem;
-  background: rgba(13, 148, 136, 0.14);
-  color: #aaf2ea;
+  padding: 0.45rem 0.8rem;
+  background: color-mix(in srgb, var(--accent-cool) 16%, transparent);
+  color: color-mix(in srgb, var(--text) 82%, white 18%);
   font-size: 0.85rem;
+  border: 1px solid color-mix(in srgb, var(--accent-cool) 22%, var(--border));
 }
 
 .form-row {
@@ -654,22 +687,18 @@ textarea {
   .app-sidebar {
     border-right: none;
     border-bottom: 1px solid var(--border);
-  }
-
-  .role-workspace {
-    grid-template-columns: 1fr;
-  }
-
-  .role-workspace__sidebar {
+    min-height: auto;
     position: static;
   }
 
-  .role-workspace__mobile-nav {
-    display: flex;
+  .app-sidebar__scroll {
+    overflow: visible;
+    padding-right: 0;
   }
 
-  .role-workspace__sidebar {
-    display: none;
+  .app-sidebar__footer {
+    border-top: none;
+    padding-top: 0;
   }
 
   .app-header,
@@ -700,10 +729,6 @@ textarea {
     padding-right: 0.9rem;
   }
 
-  .app-nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .form-row {
     grid-template-columns: 1fr;
   }
@@ -717,7 +742,7 @@ textarea {
   }
 
   .table-wrap {
-    margin: 0 -0.15rem;
+    margin: 0 -0.1rem;
   }
 
   .data-table th,
@@ -732,8 +757,10 @@ textarea {
     justify-content: center;
   }
 
-  .button.button--ghost {
-    width: auto;
+  .table-pagination__actions .button.button--ghost,
+  .app-settings-toggle,
+  .app-settings-panel .button.button--ghost {
+    width: 100%;
   }
 
   .modal-card--wide {
@@ -749,10 +776,6 @@ textarea {
 
   .app-sidebar {
     gap: 1rem;
-  }
-
-  .app-nav {
-    grid-template-columns: 1fr;
   }
 
   .stat-strip,

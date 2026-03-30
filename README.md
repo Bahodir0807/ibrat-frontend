@@ -1,6 +1,50 @@
-# React + Vite
+# ibrat-frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend for the Ibrat education panel.
+
+## Run
+
+```bash
+npm install
+npm run dev
+```
+
+## Production
+
+```bash
+npm run build
+npm run preview
+```
+
+## cPanel deploy
+
+Frontend is prepared for static cPanel hosting.
+
+What is already added:
+
+- SPA rewrite rules in [`public/.htaccess`](/D:/MyProjects/ibrat-frontend/public/.htaccess)
+- deployment script [`scripts/cpanel-deploy.mjs`](/D:/MyProjects/ibrat-frontend/scripts/cpanel-deploy.mjs)
+- auto-deploy recipe [`.cpanel.yml`](/D:/MyProjects/ibrat-frontend/.cpanel.yml)
+- production env template [`.env.production.example`](/D:/MyProjects/ibrat-frontend/.env.production.example)
+
+Default deploy target:
+
+- `$HOME/public_html`
+
+If you need another target directory, set one of these environment variables before deploy:
+
+- `CPANEL_FRONTEND_TARGET`
+- `DEPLOY_TARGET`
+
+Manual deploy flow:
+
+```bash
+npm install
+npm run build:cpanel
+npm run deploy:cpanel
+```
+
+Before production build, create `.env.production` from `.env.production.example` and set your real API URL.
 
 Currently, two official plugins are available:
 
